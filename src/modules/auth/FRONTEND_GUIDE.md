@@ -5,6 +5,17 @@ Base URLs
 - First‑party apps: `https://app.novologic.co`, `https://invoice.novologic.co`
 - Tenancy: use `x-tenant-id: <tenant-uuid>` on API/token calls, or use tenant subdomain `https://{tenant}.novologic.co` so the server can infer the tenant.
 
+### Invite‑only onboarding (recommended)
+- Create organisation (admin tool or product UI):
+  - `POST https://api.novologic.co/management/orgs` with body `{ slug, name, ownerEmail }`
+  - Response includes an owner invite `token` (one-time). Send via email link:
+    - `https://api.novologic.co/accept-invite?token=<token>`
+- Invite team members:
+  - `POST https://api.novologic.co/management/orgs/{tenantId}/invitations` with `{ email, roleName? }` (Bearer access token required)
+  - Response includes `token` (send via email).
+- Accept invitation:
+  - `POST https://api.novologic.co/management/invitations/accept` with `{ token, password }` (creates user in that org and assigns role).
+
 ### Endpoints to call (REST)
 | Method | Path | Use |
 |---|---|---|
@@ -82,6 +93,7 @@ First‑party cookies: if your `client.firstParty=true`, `/token` also sets `rt`
 ### Notes
 - Tenant detection on redirects: If you use `auth.novologic.co` (no tenant subdomain), the server cannot infer tenant from host. Ensure your front‑end adds `x-tenant-id` on API and `/token` calls, or route the user through a tenant subdomain. (We can add `?tenant_id=` to `/authorize` if needed.)
 - When refreshing, always include `x-tenant-id` to ensure the new access token carries the correct `org_id`.
+- Invite acceptance sets the user password and assigns the invited role. After accepting, perform a standard login (PKCE) and proceed as usual.
 - CORS: `*.novologic.co` allowed; send credentials if you rely on `rt` cookie (`credentials: 'include'`).
 - Security: keep `access_token` short‑lived; prefer HttpOnly refresh cookie for first‑party apps.
 
