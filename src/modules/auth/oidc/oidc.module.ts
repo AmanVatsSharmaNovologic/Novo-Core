@@ -9,19 +9,34 @@
 */
 
 import { Module } from '@nestjs/common';
-import { JwksController } from './jwks.controller';
-import { DiscoveryController } from './discovery.controller';
-import { AuthorizeController } from './authorize.controller';
-import { TokenController } from './token.controller';
-import { UserInfoController } from './userinfo.controller';
-import { IntrospectController } from './introspect.controller';
-import { RevokeController } from './revoke.controller';
+import { JwksController } from './controllers/jwks.controller';
+import { DiscoveryController } from './controllers/discovery.controller';
+import { AuthorizeController } from './controllers/authorize.controller';
+import { TokenController } from './controllers/token.controller';
+import { UserInfoController } from './controllers/userinfo.controller';
+import { IntrospectController } from './controllers/introspect.controller';
+import { RevokeController } from './controllers/revoke.controller';
 import { SessionsModule } from '../sessions/sessions.module';
 import { TokensModule } from '../tokens/tokens.module';
 import { AuditModule } from '../audit/audit.module';
+import { ClientsModule } from '../clients/clients.module';
+import { PasswordsModule } from '../passwords/passwords.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthorizationCode } from '../entities/authorization-code.entity';
+import { OpSessionService } from '../sessions/services/op-session.service';
+import { LoginController } from './controllers/login.controller';
+import { ConsentController } from './controllers/consent.controller';
+import { AuthorizationCodeService } from './services/authorization-code.service';
 
 @Module({
-  imports: [SessionsModule, TokensModule, AuditModule],
+  imports: [
+    TypeOrmModule.forFeature([AuthorizationCode]),
+    SessionsModule,
+    TokensModule,
+    AuditModule,
+    ClientsModule,
+    PasswordsModule,
+  ],
   controllers: [
     JwksController,
     DiscoveryController,
@@ -30,7 +45,10 @@ import { AuditModule } from '../audit/audit.module';
     UserInfoController,
     IntrospectController,
     RevokeController,
+    LoginController,
+    ConsentController,
   ],
+  providers: [OpSessionService, AuthorizationCodeService],
 })
 export class OidcModule {}
 

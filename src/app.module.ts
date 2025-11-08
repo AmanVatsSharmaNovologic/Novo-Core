@@ -13,13 +13,12 @@ import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
-import { CommonModule } from './common/common.module';
+import { CommonModule } from './modules/common/common.module';
 import { UtilModule } from './util/util.module';
 import { AppConfigModule } from './shared/config/config.module';
 import { LoggerModule } from './shared/logger.module';
-import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
-import { HttpErrorFilter } from './common/filters/http-exception.filter';
+import { RequestContextMiddleware } from './modules/common/middleware/request-context.middleware';
+import { HttpErrorFilter } from './modules/common/filters/http-exception.filter';
 import { DatabaseModule } from './shared/database/database.module';
 import { TenancyModule } from './shared/tenancy/tenancy.module';
 import { CryptoModule } from './shared/crypto/crypto.module';
@@ -54,7 +53,6 @@ import { createComplexityValidationRule } from './shared/graphql/graphql-complex
     OidcModule,
     ManagementModule,
     AuthModule,
-    UserModule,
     CommonModule,
     UtilModule,
     ObservabilityModule,

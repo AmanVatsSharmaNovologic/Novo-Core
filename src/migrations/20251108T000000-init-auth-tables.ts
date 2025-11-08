@@ -165,6 +165,25 @@ export class InitAuthTables20251108000000 implements MigrationInterface {
       );
     `);
     await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_audit_events_tenant_type ON audit_events(tenant_id, type)`);
+
+    await queryRunner.query(`
+      CREATE TABLE IF NOT EXISTS authorization_codes (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id uuid NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        client_id uuid NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+        code_hash varchar(255) NOT NULL,
+        redirect_uri varchar(2048) NOT NULL,
+        scope varchar(256) NULL,
+        code_challenge_method varchar(10) NOT NULL DEFAULT 'S256',
+        code_challenge varchar(128) NOT NULL,
+        expires_at timestamptz NOT NULL,
+        consumed_at timestamptz NULL,
+        created_at timestamptz NOT NULL DEFAULT now()
+      );
+    `);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_auth_codes_tenant_client ON authorization_codes(tenant_id, client_id)`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_auth_codes_hash ON authorization_codes(code_hash)`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

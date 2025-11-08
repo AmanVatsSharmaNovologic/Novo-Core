@@ -9,7 +9,7 @@
 */
 
 import { Module } from '@nestjs/common';
-import { TotpService } from './totp.service';
+import { TotpService } from './services/totp.service';
 
 @Module({
   providers: [TotpService],

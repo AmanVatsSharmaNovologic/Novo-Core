@@ -1,15 +1,13 @@
 /**
-* File: src/modules/auth/oidc/introspect.controller.ts
+* File: src/modules/auth/oidc/controllers/introspect.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Token Introspection - minimal active flag
 * Author: Cursor / BharatERP
 * Last-updated: 2025-11-08
-* Notes:
-* - Returns RFC 7662 compatible response
 */
 
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { JwkService } from '../../../shared/crypto/jwk.service';
+import { JwkService } from '../../../../shared/crypto/jwk.service';
 
 class IntrospectDto {
   token!: string;

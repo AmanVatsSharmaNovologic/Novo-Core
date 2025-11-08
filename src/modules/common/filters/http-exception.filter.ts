@@ -1,19 +1,16 @@
 /**
-* File: src/common/filters/http-exception.filter.ts
-* Module: common/filters
+* File: src/modules/common/filters/http-exception.filter.ts
+* Module: modules/common/filters
 * Purpose: Global HTTP exception filter mapping AppError to status codes
 * Author: Cursor / BharatERP
 * Last-updated: 2025-11-08
-* Notes:
-* - Logs stack traces with requestId for traceability
-* - Normalizes error payload shape
 */
 
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
-import { AppError } from '../errors';
+import { AppError } from '../../../common/errors';
 import { Request, Response } from 'express';
-import { LoggerService } from '../../shared/logger';
-import { RequestContext } from '../../shared/request-context';
+import { LoggerService } from '../../../shared/logger';
+import { RequestContext } from '../../../shared/request-context';
 
 @Catch()
 export class HttpErrorFilter implements ExceptionFilter {
@@ -27,8 +24,6 @@ export class HttpErrorFilter implements ExceptionFilter {
     const status = this.resolveStatus(exception);
     const code = this.resolveCode(exception);
     const message = this.resolveMessage(exception);
-
-    // Log with stack, code, and request context
     const stack = (exception as any)?.stack as string | undefined;
     this.logger.error({ code, status, path: req.path, stack }, message);
 
@@ -69,7 +64,7 @@ export class HttpErrorFilter implements ExceptionFilter {
     if (exception instanceof AppError) return exception.code;
     if (exception instanceof HttpException) return (exception.getResponse() as any)?.code ?? 'HTTP_EXCEPTION';
     return 'UNHANDLED_EXCEPTION';
-    }
+  }
 
   private resolveMessage(exception: unknown): string {
     if (exception instanceof HttpException) {

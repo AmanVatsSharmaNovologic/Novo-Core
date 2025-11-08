@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Login - NovoLogic</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .card { max-width: 400px; margin: 0 auto; padding: 1.5rem; border: 1px solid #ddd; border-radius: 8px; }
+      .row { margin-bottom: 0.75rem; }
+      input, button { width: 100%; padding: 0.6rem; }
+      .error { color: #b00020; margin-bottom: 0.5rem; }
+      small { color: #666; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Sign in to continue</h2>
+      <% if (typeof error !== 'undefined') { %>
+        <div class="error"><%= error %></div>
+      <% } %>
+      <form method="POST" action="/login">
+        <div class="row">
+          <input type="email" name="email" placeholder="Email" required />
+        </div>
+        <div class="row">
+          <input type="password" name="password" placeholder="Password" required />
+        </div>
+        <input type="hidden" name="client_id" value="<%= clientId %>" />
+        <input type="hidden" name="redirect_uri" value="<%= redirectUri %>" />
+        <input type="hidden" name="response_type" value="<%= responseType %>" />
+        <input type="hidden" name="scope" value="<%= scope %>" />
+        <input type="hidden" name="state" value="<%= state %>" />
+        <input type="hidden" name="code_challenge" value="<%= codeChallenge %>" />
+        <input type="hidden" name="code_challenge_method" value="<%= codeChallengeMethod %>" />
+        <div class="row">
+          <button type="submit">Continue</button>
+        </div>
+        <small>© NovoLogic</small>
+      </form>
+    </div>
+  </body>
+  </html>
+
+

@@ -9,7 +9,7 @@
 */
 
 import { Module } from '@nestjs/common';
-import { PasswordService } from './password.service';
+import { PasswordService } from './services/password.service';
 
 @Module({
   providers: [PasswordService],

@@ -1,15 +1,13 @@
 /**
-* File: src/modules/auth/oidc/userinfo.controller.ts
+* File: src/modules/auth/oidc/controllers/userinfo.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OIDC UserInfo endpoint - minimal JWT verification
 * Author: Cursor / BharatERP
 * Last-updated: 2025-11-08
-* Notes:
-* - Expects Bearer access token; returns subject and basic claims
 */
 
 import { Controller, Get, Headers, HttpException, HttpStatus } from '@nestjs/common';
-import { JwkService } from '../../../shared/crypto/jwk.service';
+import { JwkService } from '../../../../shared/crypto/jwk.service';
 
 @Controller('/userinfo')
 export class UserInfoController {
@@ -23,7 +21,6 @@ export class UserInfoController {
     const token = authorization.slice('Bearer '.length);
     try {
       const { payload } = await this.jwk.verifyJwt(token);
-      // Minimal response; expand with scope-based claims in future
       return {
         sub: payload.sub,
         email: (payload as any).email,

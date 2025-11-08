@@ -1,16 +1,14 @@
 /**
-* File: src/modules/auth/oidc/revoke.controller.ts
+* File: src/modules/auth/oidc/controllers/revoke.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Token Revocation - placeholder
 * Author: Cursor / BharatERP
 * Last-updated: 2025-11-08
-* Notes:
-* - Later will revoke refresh tokens and end sessions
 */
 
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { RequestContext } from '../../../shared/request-context';
-import { AuditService } from '../audit/audit.service';
+import { RequestContext } from '../../../../shared/request-context';
+import { AuditService } from '../../audit/audit.service';
 
 class RevokeDto {
   token!: string;
@@ -24,7 +22,6 @@ export class RevokeController {
   @Post()
   @HttpCode(200)
   async revoke(@Body() _body: RevokeDto) {
-    // No-op placeholder
     const tenantId = RequestContext.get()?.tenantId;
     if (tenantId) {
       await this.audit.logEvent({ tenantId, type: 'token.revoke' });

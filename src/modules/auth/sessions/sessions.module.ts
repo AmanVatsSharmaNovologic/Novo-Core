@@ -9,7 +9,7 @@
 */
 
 import { Module } from '@nestjs/common';
-import { SessionService } from './session.service';
+import { SessionService } from './services/session.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Session } from '../entities/session.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';

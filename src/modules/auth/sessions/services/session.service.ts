@@ -1,5 +1,5 @@
 /**
-* File: src/modules/auth/sessions/session.service.ts
+* File: src/modules/auth/sessions/services/session.service.ts
 * Module: modules/auth/sessions
 * Purpose: Manage sessions and refresh token rotation with reuse detection
 * Author: Cursor / BharatERP
@@ -11,10 +11,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Session } from '../entities/session.entity';
-import { RefreshToken } from '../entities/refresh-token.entity';
+import { Session } from '../../entities/session.entity';
+import { RefreshToken } from '../../entities/refresh-token.entity';
 import { randomUUID, createHash } from 'crypto';
-import { LoggerService } from '../../../shared/logger';
+import { LoggerService } from '../../../../shared/logger';
 
 export interface IssueSessionInput {
   tenantId: string;
@@ -53,7 +53,7 @@ export class SessionService {
       tenantId: input.tenantId,
       sessionId: session.id,
       tokenHash,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), // 30 days
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
     });
     await this.refreshRepo.save(rt);
     return { session, refreshToken };
@@ -64,7 +64,6 @@ export class SessionService {
     const existing = await this.refreshRepo.findOne({ where: { tenantId, tokenHash: oldHash } });
     if (!existing || existing.revokedAt) {
       this.logger.warn({ tenantId }, 'Refresh reuse or unknown token');
-      // Reuse detected: revoke entire session chain
       if (existing?.sessionId) {
         await this.refreshRepo
           .createQueryBuilder()
@@ -79,7 +78,6 @@ export class SessionService {
     if (!session) {
       throw new Error('invalid_grant');
     }
-    // rotate
     const newToken = this.generateRawToken();
     const newHash = this.hashToken(newToken);
     const next = this.refreshRepo.create({

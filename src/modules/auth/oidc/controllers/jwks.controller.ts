@@ -1,5 +1,5 @@
 /**
-* File: src/modules/auth/oidc/jwks.controller.ts
+* File: src/modules/auth/oidc/controllers/jwks.controller.ts
 * Module: modules/auth/oidc
 * Purpose: JWKS endpoint exposing active/retired public keys
 * Author: Cursor / BharatERP
@@ -9,7 +9,7 @@
 */
 
 import { Controller, Get } from '@nestjs/common';
-import { JwkService } from '../../../shared/crypto/jwk.service';
+import { JwkService } from '../../../../shared/crypto/jwk.service';
 
 @Controller('/jwks.json')
 export class JwksController {

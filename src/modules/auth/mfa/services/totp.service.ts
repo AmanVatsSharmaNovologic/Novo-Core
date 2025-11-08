@@ -1,11 +1,9 @@
 /**
-* File: src/modules/auth/mfa/totp.service.ts
+* File: src/modules/auth/mfa/services/totp.service.ts
 * Module: modules/auth/mfa
 * Purpose: TOTP MFA generation and verification with backup codes
 * Author: Cursor / BharatERP
 * Last-updated: 2025-11-08
-* Notes:
-* - Uses otplib; secrets should be stored securely per user
 */
 
 import { Injectable } from '@nestjs/common';

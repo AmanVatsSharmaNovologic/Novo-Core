@@ -1,5 +1,5 @@
 /**
-* File: src/modules/auth/oidc/discovery.controller.ts
+* File: src/modules/auth/oidc/controllers/discovery.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OIDC Discovery document endpoint
 * Author: Cursor / BharatERP
@@ -9,7 +9,7 @@
 */
 
 import { Controller, Get } from '@nestjs/common';
-import { AppConfig, CONFIG_DI_TOKEN } from '../../../shared/config/config.types';
+import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.types';
 import { Inject } from '@nestjs/common';
 
 @Controller('/.well-known')
@@ -31,7 +31,7 @@ export class DiscoveryController {
       subject_types_supported: ['public'],
       id_token_signing_alg_values_supported: ['RS256'],
       token_endpoint_auth_methods_supported: ['client_secret_post', 'client_secret_basic', 'none'],
-      code_challenge_methods_supported: ['S256', 'plain'],
+      code_challenge_methods_supported: ['S256'],
       scopes_supported: ['openid', 'profile', 'email', 'offline_access'],
       claims_supported: ['sub', 'email', 'email_verified', 'name', 'given_name', 'family_name'],
       grant_types_supported: ['authorization_code', 'refresh_token', 'client_credentials'],
