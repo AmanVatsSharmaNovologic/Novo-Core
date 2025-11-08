@@ -53,6 +53,8 @@ export interface AppConfig {
     user: string;
     password: string;
     ssl: boolean;
+    schema?: string; 
+    migrationsRun?: boolean;
   };
 }
 

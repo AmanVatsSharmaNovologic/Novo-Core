@@ -10,10 +10,17 @@
 
 import { Module } from '@nestjs/common';
 import { PolicyGuard } from './policy.guard';
+import { RbacService } from './rbac.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserRole } from '../entities/user-role.entity';
+import { Role } from '../entities/role.entity';
+import { ScopesGuard } from './scopes.guard';
+import { AccessTokenGuard } from './access-token.guard';
 
 @Module({
-  providers: [PolicyGuard],
-  exports: [PolicyGuard],
+  imports: [TypeOrmModule.forFeature([UserRole, Role])],
+  providers: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService],
+  exports: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService],
 })
 export class RbacModule {}
 

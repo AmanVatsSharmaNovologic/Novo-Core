@@ -29,6 +29,7 @@ import { join } from 'path';
           database: db.name,
           username: db.user,
           password: db.password,
+          schema: db.schema,
           ssl: db.ssl ? { rejectUnauthorized: false } : false,
           autoLoadEntities: true,
           synchronize: false,
@@ -39,7 +40,7 @@ import { join } from 'path';
             join(__dirname, '../../migrations/*{.ts,.js}'),
             join(process.cwd(), 'dist', 'migrations', '*.js'),
           ],
-          migrationsRun: false,
+          migrationsRun: Boolean(db.migrationsRun),
         };
       },
     }),

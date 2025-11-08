@@ -9,6 +9,12 @@
 * - Pretty logs in development, JSON logs in production
 */
 
+import * as dotenv from 'dotenv';
+// Load .env into process.env for local/dev if present
+try {
+  dotenv.config();
+} catch {}
+
 import { z } from 'zod';
 import { AppConfig, NodeEnvironment } from './config.types';
 
@@ -33,7 +39,8 @@ const envSchema = z.object({
   DB_NAME: z.string().default('novologic'),
   DB_USER: z.string().default('postgres'),
   DB_PASSWORD: z.string().default('postgres'),
-  DB_SSL: z.coerce.boolean().default(false),
+  DB_SSL: z.string().optional(),
+  DB_MIGRATIONS_RUN: z.string().optional(),
 });
 
 export function buildAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -45,6 +52,60 @@ export function buildAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig 
   const v = parsed.data;
   const isProd = v.NODE_ENV === 'production';
   const pretty = v.LOG_PRETTY && !isProd;
+
+  // Prefer explicit env overrides, then DATABASE_URL, then schema defaults
+  const hasEnv = (key: string): boolean =>
+    Object.prototype.hasOwnProperty.call(env, key) && typeof env[key] !== 'undefined' && `${env[key]}` !== '';
+
+  // Parse DATABASE_URL if provided
+  const urlStr = env.DATABASE_URL as string | undefined;
+  let urlParts: Partial<{
+    host: string;
+    port: number;
+    name: string;
+    user: string;
+    password: string;
+    schema?: string;
+    ssl?: boolean;
+  }> = {};
+  if (urlStr) {
+    try {
+      const u = new URL(urlStr);
+      const sslMode = (u.searchParams.get('sslmode') || '').toLowerCase();
+      const sslFlag = (u.searchParams.get('ssl') || '').toLowerCase();
+      urlParts = {
+        host: u.hostname,
+        port: u.port ? Number(u.port) : 5432,
+        name: u.pathname.replace(/^\//, ''),
+        user: decodeURIComponent(u.username),
+        password: decodeURIComponent(u.password),
+        schema: u.searchParams.get('schema') || undefined,
+        ssl:
+          ['require', 'verify-ca', 'verify-full'].includes(sslMode) ||
+          ['1', 'true', 'yes'].includes(sslFlag),
+      };
+    } catch {
+      // If URL parsing fails, proceed with validated env values
+    }
+  }
+
+  // Resolve DB config with precedence: explicit env > DATABASE_URL > defaults
+  const dbHost = hasEnv('DB_HOST') ? v.DB_HOST : (urlParts.host ?? v.DB_HOST);
+  const dbPort = hasEnv('DB_PORT') ? v.DB_PORT : (urlParts.port ?? v.DB_PORT);
+  const dbName = hasEnv('DB_NAME') ? v.DB_NAME : (urlParts.name ?? v.DB_NAME);
+  const dbUser = hasEnv('DB_USER') ? v.DB_USER : (urlParts.user ?? v.DB_USER);
+  const dbPassword = hasEnv('DB_PASSWORD') ? v.DB_PASSWORD : (urlParts.password ?? v.DB_PASSWORD);
+  const parseBool = (raw: unknown): boolean => {
+    if (typeof raw === 'boolean') return raw;
+    if (typeof raw === 'number') return raw !== 0;
+    if (typeof raw === 'string') {
+      const s = raw.trim().toLowerCase();
+      return s === 'true' || s === '1' || s === 'yes' || s === 'on';
+    }
+    return false;
+  };
+  const dbSsl = hasEnv('DB_SSL') ? parseBool(env.DB_SSL) : (urlParts.ssl ?? false);
+  const dbSchema = urlParts.schema;
 
   const config: AppConfig = {
     env: v.NODE_ENV as NodeEnvironment,
@@ -72,12 +133,14 @@ export function buildAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig 
       cookieDomain: v.COOKIE_DOMAIN,
     },
     db: {
-      host: v.DB_HOST,
-      port: v.DB_PORT,
-      name: v.DB_NAME,
-      user: v.DB_USER,
-      password: v.DB_PASSWORD,
-      ssl: v.DB_SSL,
+      host: dbHost,
+      port: dbPort,
+      name: dbName,
+      user: dbUser,
+      password: dbPassword,
+      ssl: dbSsl,
+      schema: dbSchema,
+      migrationsRun: hasEnv('DB_MIGRATIONS_RUN') ? parseBool(env.DB_MIGRATIONS_RUN) : false,
     },
   };
   return config;

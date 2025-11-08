@@ -12,7 +12,7 @@ import { Controller, Get, HttpException, HttpStatus, Query, Res } from '@nestjs/
 import { Response } from 'express';
 import { ClientService } from '../../clients/services/client.service';
 import { RequestContext } from '../../../../shared/request-context';
-import { OpSessionService } from '../../sessions/op-session.service';
+import { OpSessionService } from '../../sessions/services/op-session.service';
 
 @Controller('/authorize')
 export class AuthorizeController {
@@ -25,7 +25,7 @@ export class AuthorizeController {
     @Query('response_type') responseType: string,
     @Query('scope') scope: string,
     @Query('state') state: string,
-    @Query('code_challenge') codeChallenge?: string,
+    @Query('code_challenge') codeChallenge: string,
     @Query('code_challenge_method') codeChallengeMethod: 'S256' | 'plain' = 'S256',
     @Res() res: Response,
   ) {

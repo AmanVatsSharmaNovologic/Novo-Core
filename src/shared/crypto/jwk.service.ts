@@ -21,7 +21,7 @@ import { LoggerService } from '../logger';
 interface ActiveKey {
   kid: string;
   alg: string;
-  privateKey: KeyLike;
+  privateKey: unknown;
 }
 
 @Injectable()
@@ -42,10 +42,18 @@ export class JwkService {
       order: { notBefore: 'DESC' },
     });
     if (active) {
-      const privateJwk = (await this.loadPrivateJwk(active.privateRef)) as JWK;
-      const privateKey = await importJWK(privateJwk, active.alg);
-      this.activeKey = { kid: active.kid, alg: active.alg, privateKey };
-      return;
+      try {
+        const privateJwk = (await this.loadPrivateJwk(active.privateRef)) as JWK;
+        const privateKey = await importJWK(privateJwk, active.alg);
+        this.activeKey = { kid: active.kid, alg: active.alg, privateKey };
+        return;
+      } catch (e) {
+        // Private material is missing (e.g., after restart with in-memory store)
+        // Rotate a fresh key and retire the broken active key.
+        this.logger.warn({ kid: active.kid, ref: active.privateRef, err: (e as Error).message }, 'Active key private material missing; rotating new key');
+        await this.rotateKeys();
+        return;
+      }
     }
     await this.rotateKeys();
   }
@@ -99,9 +107,9 @@ export class JwkService {
       .setIssuer(this.config.domain.issuerUrl)
       .setAudience(audience)
       .setIssuedAt(now)
-      .setSubject(subject ?? payload.sub)
+      .setSubject((subject ?? (payload.sub as string)) as string)
       .setExpirationTime('5m')
-      .sign(active.privateKey);
+      .sign(active.privateKey as KeyLike);
     return token;
   }
 

@@ -15,6 +15,7 @@ import { RequestContext } from '../../../../shared/request-context';
 import { OpSessionService } from '../../sessions/services/op-session.service';
 import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.types';
 import { Inject } from '@nestjs/common';
+import { AuditService } from '../../audit/audit.service';
 
 @Controller('/login')
 export class LoginController {
@@ -22,6 +23,7 @@ export class LoginController {
     dataSource: DataSource,
     private readonly passwords: PasswordService,
     private readonly op: OpSessionService,
+    private readonly audit: AuditService,
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
   ) {
     this.users = dataSource.getRepository(User);
@@ -74,6 +76,13 @@ export class LoginController {
       return res.status(401).render('login', { error: 'Invalid credentials' });
     }
     const token = await this.op.issue(tenantId, user.id);
+    await this.audit.logEvent({
+      tenantId,
+      actorId: user.id,
+      type: 'login.success',
+      resource: 'op_session',
+      metadata: { clientId, redirectUri },
+    });
     res.cookie('op_session', token, {
       httpOnly: true,
       secure: this.config.cookie.secure,

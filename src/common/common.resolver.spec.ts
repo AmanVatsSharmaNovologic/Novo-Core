@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CommonResolver } from './common.resolver';
-import { CommonService } from './common.service';
+import { CommonResolver } from '../modules/common/common.resolver';
+import { CommonService } from '../modules/common/common.service';
 
 describe('CommonResolver', () => {
   let resolver: CommonResolver;

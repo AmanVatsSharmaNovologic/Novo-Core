@@ -27,6 +27,7 @@ import { OpSessionService } from '../sessions/services/op-session.service';
 import { LoginController } from './controllers/login.controller';
 import { ConsentController } from './controllers/consent.controller';
 import { AuthorizationCodeService } from './services/authorization-code.service';
+import { RbacModule } from '../rbac/rbac.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { AuthorizationCodeService } from './services/authorization-code.service'
     AuditModule,
     ClientsModule,
     PasswordsModule,
+    RbacModule,
   ],
   controllers: [
     JwksController,

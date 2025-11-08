@@ -14,9 +14,10 @@ import { UserResolverGql } from './user.resolver';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tenant } from '../entities/tenant.entity';
 import { User } from '../entities/user.entity';
+import { PasswordsModule } from '../passwords/passwords.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Tenant, User])],
+  imports: [TypeOrmModule.forFeature([Tenant, User]), PasswordsModule],
   providers: [TenantResolver, UserResolverGql],
 })
 export class ManagementModule {}

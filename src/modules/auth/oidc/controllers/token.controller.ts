@@ -16,6 +16,8 @@ import { AuthorizationCodeService } from '../services/authorization-code.service
 import { ClientService } from '../../clients/services/client.service';
 import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.types';
 import { Inject } from '@nestjs/common';
+import { RbacService } from '../../rbac/rbac.service';
+import { PasswordService } from '../../passwords/services/password.service';
 
 class TokenRequestDto {
   grant_type!: 'authorization_code' | 'refresh_token' | 'client_credentials';
@@ -25,6 +27,7 @@ class TokenRequestDto {
   refresh_token?: string;
   scope?: string;
   client_id?: string;
+  client_secret?: string;
 }
 
 @Controller('/token')
@@ -35,6 +38,8 @@ export class TokenController {
     private readonly audit: AuditService,
     private readonly codes: AuthorizationCodeService,
     private readonly clients: ClientService,
+    private readonly rbac: RbacService,
+    private readonly passwords: PasswordService,
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
   ) {}
 
@@ -50,8 +55,12 @@ export class TokenController {
         throw new HttpException({ code: 'invalid_request', message: 'Missing refresh_token' }, HttpStatus.BAD_REQUEST);
       }
       const rotated = await this.sessions.rotateRefreshToken(tenantId, body.refresh_token);
+      const roles = await this.rbac.getUserRoleNames(tenantId, rotated.userId);
       const accessToken = await this.tokens.issueAccessToken(rotated.userId, 'novologic-api', {
         scope: body.scope ?? 'openid profile email',
+        org_id: tenantId,
+        sid: rotated.sessionId,
+        roles,
       });
       await this.audit.logEvent({
         tenantId,
@@ -83,13 +92,43 @@ export class TokenController {
       }
       const client = await this.clients.findByClientId(tenantId, body.client_id);
       if (!client) throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
+      if (!client.grantTypes?.includes('authorization_code')) {
+        throw new HttpException({ code: 'unauthorized_client' }, HttpStatus.BAD_REQUEST);
+      }
+      // Authenticate confidential clients
+      if (client.clientSecretHash) {
+        let providedSecret: string | undefined = body.client_secret;
+        const auth = (_req.headers['authorization'] as string | undefined) || '';
+        if (auth.startsWith('Basic ')) {
+          try {
+            const decoded = Buffer.from(auth.slice('Basic '.length), 'base64').toString('utf8');
+            const sep = decoded.indexOf(':');
+            const cid = sep >= 0 ? decoded.slice(0, sep) : decoded;
+            const secret = sep >= 0 ? decoded.slice(sep + 1) : '';
+            if (cid && cid === body.client_id) {
+              providedSecret = secret;
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+        if (!providedSecret) {
+          throw new HttpException({ code: 'invalid_client', message: 'Missing client_secret' }, HttpStatus.BAD_REQUEST);
+        }
+        const ok = await this.passwords.verifyPassword(client.clientSecretHash, providedSecret);
+        if (!ok) throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
+      }
       const consumed = await this.codes.consume(tenantId, client.id, body.code, body.redirect_uri, body.code_verifier);
       const { session, refreshToken } = await this.sessions.issueSession({
         tenantId,
         userId: consumed.userId,
       });
+      const roles = await this.rbac.getUserRoleNames(tenantId, consumed.userId);
       const accessToken = await this.tokens.issueAccessToken(consumed.userId, 'novologic-api', {
         scope: consumed.scope ?? 'openid profile email',
+        org_id: tenantId,
+        sid: session.id,
+        roles,
       });
       if (client.firstParty) {
         res.cookie('rt', refreshToken, {
