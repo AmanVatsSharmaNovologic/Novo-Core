@@ -1,0 +1,57 @@
+/**
+* File: src/modules/auth/oidc/oidc.module.ts
+* Module: modules/auth/oidc
+* Purpose: OIDC REST endpoints module (JWKS for now)
+* Author: Cursor / BharatERP
+* Last-updated: 2025-11-08
+* Notes:
+* - Extensible with authorize, token, userinfo, introspect, revoke
+*/
+
+import { Module } from '@nestjs/common';
+import { JwksController } from './controllers/jwks.controller';
+import { DiscoveryController } from './controllers/discovery.controller';
+import { AuthorizeController } from './controllers/authorize.controller';
+import { TokenController } from './controllers/token.controller';
+import { UserInfoController } from './controllers/userinfo.controller';
+import { IntrospectController } from './controllers/introspect.controller';
+import { RevokeController } from './controllers/revoke.controller';
+import { SessionsModule } from '../sessions/sessions.module';
+import { TokensModule } from '../tokens/tokens.module';
+import { AuditModule } from '../audit/audit.module';
+import { ClientsModule } from '../clients/clients.module';
+import { PasswordsModule } from '../passwords/passwords.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthorizationCode } from '../entities/authorization-code.entity';
+import { OpSessionService } from '../sessions/services/op-session.service';
+import { LoginController } from './controllers/login.controller';
+import { ConsentController } from './controllers/consent.controller';
+import { AuthorizationCodeService } from './services/authorization-code.service';
+import { RbacModule } from '../rbac/rbac.module';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([AuthorizationCode]),
+    SessionsModule,
+    TokensModule,
+    AuditModule,
+    ClientsModule,
+    PasswordsModule,
+    RbacModule,
+  ],
+  controllers: [
+    JwksController,
+    DiscoveryController,
+    AuthorizeController,
+    TokenController,
+    UserInfoController,
+    IntrospectController,
+    RevokeController,
+    LoginController,
+    ConsentController,
+  ],
+  providers: [OpSessionService, AuthorizationCodeService],
+})
+export class OidcModule {}
+
+

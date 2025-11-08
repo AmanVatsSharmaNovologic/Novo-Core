@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Consent - NovoLogic</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      .card { max-width: 500px; margin: 0 auto; padding: 1.5rem; border: 1px solid #ddd; border-radius: 8px; }
+      .row { margin-bottom: 0.75rem; }
+      button { padding: 0.6rem 1rem; margin-right: 0.5rem; }
+      .scopes { color: #333; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Allow access?</h2>
+      <p><strong><%= clientName %></strong> is requesting access:</p>
+      <ul class="scopes">
+        <% (scope || '').split(' ').filter(Boolean).forEach(function(s){ %>
+          <li><code><%= s %></code></li>
+        <% }) %>
+      </ul>
+      <form method="POST" action="/consent">
+        <input type="hidden" name="client_id" value="<%= clientId %>" />
+        <input type="hidden" name="redirect_uri" value="<%= redirectUri %>" />
+        <input type="hidden" name="scope" value="<%= scope %>" />
+        <input type="hidden" name="state" value="<%= state %>" />
+        <input type="hidden" name="code_challenge" value="<%= codeChallenge %>" />
+        <input type="hidden" name="code_challenge_method" value="<%= codeChallengeMethod %>" />
+        <button type="submit" name="decision" value="approve">Allow</button>
+        <button type="submit" name="decision" value="deny">Deny</button>
+      </form>
+    </div>
+  </body>
+  </html>
+
+
