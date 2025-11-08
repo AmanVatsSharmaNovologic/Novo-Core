@@ -42,7 +42,7 @@ export class ConsentController {
     if (!sessionCookie) return res.redirect(`/login?${res.req.url.split('?')[1]}`);
     try {
       const sess = await this.op.verify(sessionCookie);
-      return res.render('auth/consent', {
+      return res.render('consent', {
         clientId,
         redirectUri,
         responseType,

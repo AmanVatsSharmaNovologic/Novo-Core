@@ -7,24 +7,26 @@
 */
 
 import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
 import { Response } from 'express';
 import { PasswordService } from '../../passwords/services/password.service';
 import { RequestContext } from '../../../../shared/request-context';
-import { OpSessionService } from '../../sessions/op-session.service';
+import { OpSessionService } from '../../sessions/services/op-session.service';
 import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.types';
 import { Inject } from '@nestjs/common';
 
 @Controller('/login')
 export class LoginController {
   constructor(
-    @InjectRepository(User) private readonly users: Repository<User>,
+    dataSource: DataSource,
     private readonly passwords: PasswordService,
     private readonly op: OpSessionService,
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
-  ) {}
+  ) {
+    this.users = dataSource.getRepository(User);
+  }
+  private readonly users: Repository<User>;
 
   @Get()
   getLogin(
@@ -37,7 +39,7 @@ export class LoginController {
     @Query('code_challenge_method') codeChallengeMethod: string,
     @Res() res: Response,
   ) {
-    return res.render('auth/login', {
+    return res.render('login', {
       clientId,
       redirectUri,
       responseType,
@@ -65,11 +67,11 @@ export class LoginController {
     if (!tenantId) throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
     const user = await this.users.findOne({ where: { tenantId, email } });
     if (!user) {
-      return res.status(401).render('auth/login', { error: 'Invalid credentials' });
+      return res.status(401).render('login', { error: 'Invalid credentials' });
     }
     const ok = await this.passwords.verifyPassword(user.passwordHash, password);
     if (!ok) {
-      return res.status(401).render('auth/login', { error: 'Invalid credentials' });
+      return res.status(401).render('login', { error: 'Invalid credentials' });
     }
     const token = await this.op.issue(tenantId, user.id);
     res.cookie('op_session', token, {
@@ -86,7 +88,7 @@ export class LoginController {
       )}&response_type=${responseType}&scope=${encodeURIComponent(scope)}&state=${encodeURIComponent(
         state,
       )}&code_challenge=${encodeURIComponent(codeChallenge)}&code_challenge_method=${encodeURIComponent(
-        code_challengeMethod,
+          codeChallengeMethod,
       )}`,
     );
   }
