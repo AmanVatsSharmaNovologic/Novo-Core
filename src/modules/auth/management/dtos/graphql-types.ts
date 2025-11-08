@@ -1,11 +1,9 @@
 /**
-* File: src/modules/auth/management/types.ts
+* File: src/modules/auth/management/dtos/graphql-types.ts
 * Module: modules/auth/management
 * Purpose: GraphQL types for management API
 * Author: Cursor / BharatERP
 * Last-updated: 2025-11-08
-* Notes:
-* - Separate GraphQL types from persistence entities
 */
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';

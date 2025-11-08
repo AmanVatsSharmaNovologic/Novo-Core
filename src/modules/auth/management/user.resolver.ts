@@ -9,7 +9,7 @@
 */
 
 import { Resolver, Query, Args } from '@nestjs/graphql';
-import { UserGql } from './types';
+import { UserGql } from './dtos/graphql-types';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';

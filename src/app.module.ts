@@ -12,9 +12,10 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
+// import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './modules/common/common.module';
-import { UtilModule } from './util/util.module';
+import { UtilModule } from './modules/util/util.module';
+import { UserModule } from './modules/user/user.module';
 import { AppConfigModule } from './shared/config/config.module';
 import { LoggerModule } from './shared/logger.module';
 import { RequestContextMiddleware } from './modules/common/middleware/request-context.middleware';
@@ -52,7 +53,8 @@ import { createComplexityValidationRule } from './shared/graphql/graphql-complex
     }),
     OidcModule,
     ManagementModule,
-    AuthModule,
+    // AuthModule, // legacy
+    UserModule,
     CommonModule,
     UtilModule,
     ObservabilityModule,
