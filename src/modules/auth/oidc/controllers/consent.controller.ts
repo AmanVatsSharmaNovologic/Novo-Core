@@ -6,13 +6,17 @@
 * Last-updated: 2025-11-08
 */
 
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { RequestContext } from '../../../../shared/request-context';
 import { ClientService } from '../../clients/services/client.service';
 import { AuthorizationCodeService } from '../services/authorization-code.service';
 import { OpSessionService } from '../../sessions/services/op-session.service';
 import { AuditService } from '../../audit/audit.service';
+import { CsrfGuard } from '../../../common/guards/csrf.guard';
+import { randomUUID } from 'crypto';
+import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.types';
+import { Inject } from '@nestjs/common';
 
 @Controller('/consent')
 export class ConsentController {
@@ -21,6 +25,7 @@ export class ConsentController {
     private readonly clients: ClientService,
     private readonly codes: AuthorizationCodeService,
     private readonly audit: AuditService,
+    @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
   ) {}
 
   @Get()
@@ -47,6 +52,15 @@ export class ConsentController {
     if (!sessionCookie) return res.redirect(`/login?${res.req.url.split('?')[1]}`);
     try {
       const sess = await this.op.verify(sessionCookie);
+      const csrfToken = randomUUID();
+      res.cookie('csrf', csrfToken, {
+        httpOnly: false,
+        secure: this.config.cookie.secure,
+        sameSite: this.config.cookie.sameSite === 'none' ? 'none' : this.config.cookie.sameSite,
+        domain: this.config.cookie.domain,
+        path: '/',
+        maxAge: 1000 * 60 * 15,
+      });
       return res.render('consent', {
         clientId,
         redirectUri,
@@ -57,6 +71,7 @@ export class ConsentController {
         codeChallengeMethod,
         clientName: client.clientId,
         userId: sess.userId,
+        csrfToken,
       });
     } catch {
       return res.redirect(`/login?${res.req.url.split('?')[1]}`);
@@ -64,6 +79,7 @@ export class ConsentController {
   }
 
   @Post()
+  @UseGuards(CsrfGuard)
   async postConsent(
     @Body('decision') decision: 'approve' | 'deny',
     @Body('client_id') clientId: string,

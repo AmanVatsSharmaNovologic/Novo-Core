@@ -6,7 +6,7 @@
 * Last-updated: 2025-11-08
 */
 
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
 import { Response } from 'express';
@@ -18,6 +18,8 @@ import { Inject } from '@nestjs/common';
 import { AuditService } from '../../audit/audit.service';
 import { LoginAttemptsService } from '../services/login-attempts.service';
 import { LoggerService } from '../../../../shared/logger';
+import { CsrfGuard } from '../../../common/guards/csrf.guard';
+import { randomUUID } from 'crypto';
 
 @Controller('/login')
 export class LoginController {
@@ -45,6 +47,15 @@ export class LoginController {
     @Query('code_challenge_method') codeChallengeMethod: string,
     @Res() res: Response,
   ) {
+    const csrfToken = randomUUID();
+    res.cookie('csrf', csrfToken, {
+      httpOnly: false,
+      secure: this.config.cookie.secure,
+      sameSite: this.config.cookie.sameSite === 'none' ? 'none' : this.config.cookie.sameSite,
+      domain: this.config.cookie.domain,
+      path: '/',
+      maxAge: 1000 * 60 * 15,
+    });
     return res.render('login', {
       clientId,
       redirectUri,
@@ -53,10 +64,12 @@ export class LoginController {
       state,
       codeChallenge,
       codeChallengeMethod,
+      csrfToken,
     });
   }
 
   @Post()
+  @UseGuards(CsrfGuard)
   async postLogin(
     @Body('email') email: string,
     @Body('password') password: string,
