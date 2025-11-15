@@ -45,6 +45,15 @@ export class HttpErrorFilter implements ExceptionFilter {
     }
     if (exception instanceof AppError) {
       switch (exception.code) {
+        case 'INVALID_GRANT':
+        case 'INVALID_CLIENT':
+          return HttpStatus.BAD_REQUEST;
+        case 'UNAUTHORIZED':
+          return HttpStatus.UNAUTHORIZED;
+        case 'FORBIDDEN':
+          return HttpStatus.FORBIDDEN;
+        case 'TENANT_MISMATCH':
+          return HttpStatus.BAD_REQUEST;
         case 'ORDER_VALIDATION_ERROR':
           return HttpStatus.BAD_REQUEST;
         case 'INSUFFICIENT_MARGIN':
