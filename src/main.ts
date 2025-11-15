@@ -14,6 +14,7 @@ import { LoggerService } from './shared/logger';
 import { AppConfig, CONFIG_DI_TOKEN } from './shared/config/config.types';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
@@ -38,6 +39,14 @@ async function bootstrap() {
   // EJS views for login/consent under module path
   app.setBaseViewsDir(join(process.cwd(), 'src', 'modules', 'auth', 'oidc', 'views'));
   app.setViewEngine('ejs');
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidUnknownValues: true,
+    }),
+  );
 
   await app.listen(config.http.port);
   logger.info({ port: config.http.port, env: config.env }, '🚀 NovoLogic core started');

@@ -3,7 +3,7 @@
 * Module: app
 * Purpose: Root module bootstrapping core modules and global providers
 * Author: Cursor / BharatERP
-* Last-updated: 2025-11-08
+* Last-updated: 2025-11-15
 * Notes:
 * - Applies RequestContextMiddleware globally for requestId propagation
 * - Imports global AppConfig and Logger modules
@@ -31,6 +31,7 @@ import { ManagementModule } from './modules/auth/management/management.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ObservabilityModule } from './modules/observability/observability.module';
 import { createComplexityValidationRule } from './shared/graphql/graphql-complexity';
+import { GlobalAuthGuard } from './modules/auth/rbac/global-auth.guard';
 
 @Module({
   imports: [
@@ -72,6 +73,10 @@ import { createComplexityValidationRule } from './shared/graphql/graphql-complex
     {
       provide: 'APP_GUARD',
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: 'APP_GUARD',
+      useClass: GlobalAuthGuard,
     },
   ],
 })

@@ -20,6 +20,7 @@ import { PasswordService } from '../../passwords/services/password.service';
 import { Role } from '../../entities/role.entity';
 import { UserRole } from '../../entities/user-role.entity';
 import { LoggerService } from '../../../../shared/logger';
+import { TenantGuard } from '../../../../shared/tenancy/tenant.guard';
 
 @Controller('/management')
 export class InvitationsController {
@@ -33,7 +34,7 @@ export class InvitationsController {
   ) {}
 
   @Post('/orgs/:tenantId/invitations')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, TenantGuard)
   async createInvitation(@Param('tenantId') tenantId: string, @Body() body: CreateInvitationDto) {
     const tenantHeader = RequestContext.get()?.tenantId;
     if (tenantHeader && tenantHeader !== tenantId) {

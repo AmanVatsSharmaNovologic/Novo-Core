@@ -16,11 +16,15 @@ import { UserRole } from '../entities/user-role.entity';
 import { Role } from '../entities/role.entity';
 import { ScopesGuard } from './scopes.guard';
 import { AccessTokenGuard } from './access-token.guard';
+import { RolePermission } from '../entities/role-permission.entity';
+import { Permission } from '../entities/permission.entity';
+import { PermissionsService } from './permissions.service';
+import { AuthClaimsGuard } from './auth-claims.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserRole, Role])],
-  providers: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService],
-  exports: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService],
+  imports: [TypeOrmModule.forFeature([UserRole, Role, RolePermission, Permission])],
+  providers: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService, PermissionsService, AuthClaimsGuard],
+  exports: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService, PermissionsService, AuthClaimsGuard],
 })
 export class RbacModule {}
 

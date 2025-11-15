@@ -16,6 +16,8 @@ import { OpSessionService } from '../../sessions/services/op-session.service';
 import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.types';
 import { Inject } from '@nestjs/common';
 import { AuditService } from '../../audit/audit.service';
+import { LoginAttemptsService } from '../services/login-attempts.service';
+import { LoggerService } from '../../../../shared/logger';
 
 @Controller('/login')
 export class LoginController {
@@ -24,6 +26,8 @@ export class LoginController {
     private readonly passwords: PasswordService,
     private readonly op: OpSessionService,
     private readonly audit: AuditService,
+    private readonly attempts: LoginAttemptsService,
+    private readonly logger: LoggerService,
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
   ) {
     this.users = dataSource.getRepository(User);
@@ -67,14 +71,38 @@ export class LoginController {
   ) {
     const tenantId = RequestContext.get()?.tenantId;
     if (!tenantId) throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
+    const ip = (res.req as any).ip as string | undefined || (res.req.socket?.remoteAddress as string | undefined) || '';
+    const ua = (res.req.headers['user-agent'] as string | undefined) || '';
+    if (await this.attempts.isLocked(tenantId, email, ip || '')) {
+      await this.audit.logEvent({
+        tenantId,
+        type: 'login.locked',
+        metadata: { email, ip, clientId, ua },
+      });
+      return res.status(429).render('login', { error: 'Too many attempts. Try again later.' });
+    }
     const user = await this.users.findOne({ where: { tenantId, email } });
     if (!user) {
+      await this.attempts.incrementFailure(tenantId, email, ip || '');
+      await this.audit.logEvent({
+        tenantId,
+        type: 'login.failure',
+        metadata: { reason: 'user_not_found', email, ip, clientId, ua },
+      });
       return res.status(401).render('login', { error: 'Invalid credentials' });
     }
     const ok = await this.passwords.verifyPassword(user.passwordHash, password);
     if (!ok) {
+      await this.attempts.incrementFailure(tenantId, email, ip || '');
+      await this.audit.logEvent({
+        tenantId,
+        actorId: user.id,
+        type: 'login.failure',
+        metadata: { reason: 'bad_password', email, ip, clientId, ua },
+      });
       return res.status(401).render('login', { error: 'Invalid credentials' });
     }
+    await this.attempts.resetOnSuccess(tenantId, email, ip || '');
     const token = await this.op.issue(tenantId, user.id);
     await this.audit.logEvent({
       tenantId,

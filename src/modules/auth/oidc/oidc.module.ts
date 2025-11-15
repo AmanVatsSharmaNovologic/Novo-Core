@@ -28,10 +28,12 @@ import { LoginController } from './controllers/login.controller';
 import { ConsentController } from './controllers/consent.controller';
 import { AuthorizationCodeService } from './services/authorization-code.service';
 import { RbacModule } from '../rbac/rbac.module';
+import { LoginAttemptsService } from './services/login-attempts.service';
+import { LoginAttempt } from '../entities/login-attempt.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AuthorizationCode]),
+    TypeOrmModule.forFeature([AuthorizationCode, LoginAttempt]),
     SessionsModule,
     TokensModule,
     AuditModule,
@@ -50,7 +52,7 @@ import { RbacModule } from '../rbac/rbac.module';
     LoginController,
     ConsentController,
   ],
-  providers: [OpSessionService, AuthorizationCodeService],
+  providers: [OpSessionService, AuthorizationCodeService, LoginAttemptsService],
 })
 export class OidcModule {}
 
