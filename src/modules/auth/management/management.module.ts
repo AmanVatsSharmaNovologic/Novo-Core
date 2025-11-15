@@ -21,11 +21,15 @@ import { Invitation } from '../entities/invitation.entity';
 import { Role } from '../entities/role.entity';
 import { UserRole } from '../entities/user-role.entity';
 import { RbacModule } from '../rbac/rbac.module';
+import { Permission } from '../entities/permission.entity';
+import { RolePermission } from '../entities/role-permission.entity';
+import { RolesController } from './controllers/roles.controller';
+import { PermissionsController } from './controllers/permissions.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Tenant, User, Invitation, Role, UserRole]), PasswordsModule, RbacModule],
+  imports: [TypeOrmModule.forFeature([Tenant, User, Invitation, Role, UserRole, Permission, RolePermission]), PasswordsModule, RbacModule],
   providers: [TenantResolver, UserResolverGql],
-  controllers: [OrgsController, InvitationsController],
+  controllers: [OrgsController, InvitationsController, RolesController, PermissionsController],
 })
 export class ManagementModule {}
 
