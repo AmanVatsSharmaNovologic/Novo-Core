@@ -25,7 +25,8 @@ import { TenancyModule } from './shared/tenancy/tenancy.module';
 import { CryptoModule } from './shared/crypto/crypto.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver } from '@nestjs/apollo';
+import { YogaDriver, YogaDriverConfig } from '@graphql-yoga/nestjs';
+import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { ManagementModule } from './modules/auth/management/management.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ObservabilityModule } from './modules/observability/observability.module';
@@ -44,12 +45,14 @@ import { createComplexityValidationRule } from './shared/graphql/graphql-complex
         limit: 100,
       },
     ]),
-    GraphQLModule.forRoot({
-      driver: ApolloDriver as any,
+    GraphQLModule.forRoot<YogaDriverConfig>({
+      driver: YogaDriver,
       autoSchemaFile: true,
       sortSchema: true,
-      csrfPrevention: true,
       validationRules: [createComplexityValidationRule(1500)],
+      plugins: [useCSRFPrevention()],
+      graphiql: process.env.NODE_ENV !== 'production',
+      context: ({ req }) => ({ requestId: (req as any).requestId }),
     }),
     AuthModule,
     // OidcModule, // now aggregated

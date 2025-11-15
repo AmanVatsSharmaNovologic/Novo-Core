@@ -18,5 +18,6 @@ Contents
 
 Changelog
 - 2025-11-08: Initial module extraction and docs
+- 2025-11-15 IST: Global GraphQL driver migrated to Yoga; common middleware continues to propagate `requestId` used in GraphQL context.
 
 

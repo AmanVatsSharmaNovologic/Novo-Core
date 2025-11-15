@@ -19,3 +19,4 @@ DATABASE_URL="postgresql://admin:admin123@ec2-18-61-254-86.ap-south-2.compute.am
 
 
 
+
