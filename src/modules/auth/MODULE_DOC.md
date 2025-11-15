@@ -1,7 +1,7 @@
 ---
 title: Auth Module (Hybrid Auth)
 description: OIDC REST for product UIs + GraphQL for admin/management
-updated: 2025-11-08 (IST)
+updated: 2025-11-15 (IST)
 ---
 
 ## What this module provides
@@ -22,7 +22,7 @@ updated: 2025-11-08 (IST)
 | GET    | `/authorize`                           | Start OAuth2 Authorization Code + PKCE redirect |
 | GET    | `/login`                                | OP login form (email/password)     |
 | GET    | `/consent`                              | Scope consent screen               |
-| POST   | `/token` (form or JSON)                 | Exchange `code`→tokens, or refresh |
+| POST   | `/token` (form or JSON)                 | `authorization_code` → tokens, `refresh_token`, `client_credentials` |
 | GET    | `/userinfo` (Bearer access_token)       | Basic OIDC claims (sub, email, …)  |
 | POST   | `/introspect`                           | RFC 7662 token status              |
 | POST   | `/revoke`                                | Revoke refresh token               |
@@ -35,6 +35,16 @@ Access token claims now include:
 - `sid`: session ID
 - `roles`: array of role names within the active org
 Refresh token: HttpOnly cookie `rt` for first‑party clients (`Client.firstParty=true`)
+
+### Machine-to-machine (client_credentials)
+```mermaid
+sequenceDiagram
+  autonumber
+  participant SVC as Service (client)
+  participant AUTH as Auth (/token)
+  SVC->>AUTH: POST /token (grant_type=client_credentials, Basic client_id:secret)
+  AUTH-->>SVC: 200 { access_token, token_type, expires_in, scope }
+```
 
 ## Front‑end quick start (PKCE, SPA)
 
@@ -105,6 +115,16 @@ flowchart LR
   E --> F[Rotate RT on refresh]
   F -->|reuse detection| G[Revoke chain + alert]
 ```
+Revocation:
+```mermaid
+sequenceDiagram
+  autonumber
+  participant APP as App
+  participant AUTH as Auth (/revoke)
+  APP->>AUTH: POST /revoke (token=refresh_token)
+  AUTH->>AUTH: Revoke all RTs for session (idempotent)
+  AUTH-->>APP: 200 {}
+```
 
 Tenant resolution:
 - `x-tenant-id` header (from gateway) → used if present
@@ -114,7 +134,7 @@ Tenant resolution:
 Security
 - Passwords: Argon2; ID token/Access token: RS256 with rotating keys (JWKS)
 - Refresh token rotation with reuse detection; HttpOnly cookie for 1st‑party SPAs
-- CORS allowlist (incl. `*.novologic.co`), CSRF protection for form posts, rate limiting
+- CORS allowlist (incl. `*.novologic.co`), CSRF (double-submit) for form posts, rate limiting
 - Confidential clients must authenticate at `/token` (Basic or body) when `clientSecretHash` is set.
 - Scope requests are restricted to the client's allowed scopes at consent time.
 
@@ -123,6 +143,7 @@ Admin GraphQL (internal tooling)
 - Extend with Role/Permission/Client admin as needed
 
 ## Changelog
+- 2025‑11‑15: Added client_credentials grant; refresh token revocation; GlobalAuthGuard + AuthClaimsGuard; permission service (DB); tenant guard; CSRF on login/consent; failed-login tracking; RBAC management endpoints.
 - 2025‑11‑08: Added org-scoped access token claims (`org_id`, `sid`, `roles`); client hardening (grant/scopes/secret checks); audit logs for login/consent; scaffolded `oidc-provider` module behind `OIDC_PROVIDER=true`; introduced `identities` and `memberships` tables with migrations.
 
 
