@@ -1,3 +1,11 @@
+/**
+ * @file user.resolver.spec.ts
+ * @module modules/auth/management
+ * @description Unit tests for UserResolverGql covering user registration path.
+ *              Mocks repository to verify basic persistence contract and DTO flow.
+ * @author BharatERP
+ * @created 2025-11-15
+ */
 import { UserResolverGql } from './user.resolver';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';

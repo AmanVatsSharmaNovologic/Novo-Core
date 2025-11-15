@@ -13,6 +13,11 @@ updated: 2025-11-15 (IST)
   - `tenants()` list, `users(tenantId)`, `registerUser(input)` (more admin CRUD to be added)
 - Sessions & refresh rotation, MFA (TOTP), RBAC scaffolding, audit logs
 
+## Folder Documentation
+- Root overview: `src/modules/auth/README.md`
+- Submodules and deep docs: see each folder’s `README.md`:
+  - `audit/`, `clients/`, `entities/`, `management/` (and its `controllers/`, `dtos/`), `mfa/`, `oidc/` (and its `controllers/`, `services/`, `views/`, `ui/`), `oidc-provider/`, `passwords/`, `rbac/`, `sessions/` (and its `services/`), `tokens/`
+
 ## REST surface (for product/front‑end)
 
 | Method | Path                                   | Purpose                            |
