@@ -4,6 +4,7 @@
 - REST: `/.well-known/openid-configuration`, `/jwks.json`, `/authorize`, `/token`, `/userinfo`, `/introspect`, `/revoke`
 - GraphQL management at `/graphql` for tenants and users
 - Sessions + refresh rotation, MFA (TOTP), RBAC, audit logging
+ - Machine-to-machine via `client_credentials` (JWT 5m, no refresh)
 
 See also (module docs for front‑end):
 - `src/modules/auth/FRONTEND_GUIDE.md`
@@ -19,6 +20,15 @@ flowchart LR
   Client -->|refresh_token| Token[POST /token]
   Token -->|verify+rotate| DB[(refresh_tokens)]
   Token -->|issue| Access[access_token]
+```
+
+Mermaid (Client Credentials)
+```mermaid
+sequenceDiagram
+  participant SVC as Service
+  participant AUTH as Auth
+  SVC->>AUTH: POST /token (client_credentials)
+  AUTH-->>SVC: access_token (5m)
 ```
 
 
