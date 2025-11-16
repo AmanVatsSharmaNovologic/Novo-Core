@@ -15,6 +15,7 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { RegisterUserInput } from './dtos/register-user.input';
 import { PasswordService } from '../passwords/services/password.service';
+import { AppError } from '../../../common/errors';
 
 @Resolver(() => UserGql)
 export class UserResolverGql {
@@ -42,7 +43,7 @@ export class UserResolverGql {
   async registerUser(@Args('input') input: RegisterUserInput): Promise<UserGql> {
     const exists = await this.repo.findOne({ where: { tenantId: input.tenantId, email: input.email } });
     if (exists) {
-      throw new Error('User already exists');
+      throw new AppError('CONFLICT', 'User already exists');
     }
     const hash = await this.passwords.hashPassword(input.password);
     const u = this.repo.create({

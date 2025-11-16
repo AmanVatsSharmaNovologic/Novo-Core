@@ -15,6 +15,7 @@ import { Session } from '../../entities/session.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { randomUUID, createHash } from 'crypto';
 import { LoggerService } from '../../../../shared/logger';
+import { AppError } from '../../../../common/errors';
 
 export interface IssueSessionInput {
   tenantId: string;
@@ -72,11 +73,12 @@ export class SessionService {
           .where('session_id = :sid', { sid: existing.sessionId })
           .execute();
       }
-      throw new Error('invalid_grant');
+      // Use standardized AppError code for exception filter mapping
+      throw new AppError('INVALID_GRANT', 'Invalid refresh token');
     }
     const session = await this.sessionRepo.findOne({ where: { id: existing.sessionId } });
     if (!session) {
-      throw new Error('invalid_grant');
+      throw new AppError('INVALID_GRANT', 'Invalid session for refresh token');
     }
     const newToken = this.generateRawToken();
     const newHash = this.hashToken(newToken);

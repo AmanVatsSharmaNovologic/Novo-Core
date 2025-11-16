@@ -139,15 +139,25 @@ Tenant resolution:
 Security
 - Passwords: Argon2; ID token/Access token: RS256 with rotating keys (JWKS)
 - Refresh token rotation with reuse detection; HttpOnly cookie for 1st‑party SPAs
+- Refresh fallback: `/token` accepts `refresh_token` from HttpOnly cookie `rt` when body param is absent (first‑party).
 - CORS allowlist (incl. `*.novologic.co`), CSRF (double-submit) for form posts, rate limiting
 - Confidential clients must authenticate at `/token` (Basic or body) when `clientSecretHash` is set.
 - Scope requests are restricted to the client's allowed scopes at consent time.
+
+Caching (no Redis required now)
+- Permissions cache: in‑memory LRU with TTL=60s (`PermissionsService`) keyed by `(tenantId,userId)`.
+- JWKS verify cache: in‑memory cache of imported public keys by `kid` (TTL=5m) to avoid DB hits on each verify.
+- Both can be swapped to Redis later via a `CacheProvider` interface.
+
+Tenancy enforcement
+- `TenantStatusGuard` blocks requests for suspended tenants (applied on OIDC and Management modules).
 
 Admin GraphQL (internal tooling)
 - `/graphql` (Apollo): `tenants()`, `users(tenantId)`, `registerUser(input)`
 - Extend with Role/Permission/Client admin as needed
 
 ## Changelog
+- 2025‑11‑16: Added refresh cookie fallback; in‑memory caches (permissions, JWKS verify); TenantStatusGuard on OIDC/Management; GraphQL Auth guard (optional); E2E tests via Testcontainers.
 - 2025‑11‑15: Added client_credentials grant; refresh token revocation; GlobalAuthGuard + AuthClaimsGuard; permission service (DB); tenant guard; CSRF on login/consent; failed-login tracking; RBAC management endpoints.
 - 2025‑11‑08: Added org-scoped access token claims (`org_id`, `sid`, `roles`); client hardening (grant/scopes/secret checks); audit logs for login/consent; scaffolded `oidc-provider` module behind `OIDC_PROVIDER=true`; introduced `identities` and `memberships` tables with migrations.
 
