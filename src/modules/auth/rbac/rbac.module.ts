@@ -20,10 +20,11 @@ import { RolePermission } from '../entities/role-permission.entity';
 import { Permission } from '../entities/permission.entity';
 import { PermissionsService } from './permissions.service';
 import { AuthClaimsGuard } from './auth-claims.guard';
+import { MemoryCacheService } from '../../../shared/cache/memory-cache.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserRole, Role, RolePermission, Permission])],
-  providers: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService, PermissionsService, AuthClaimsGuard],
+  providers: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService, PermissionsService, AuthClaimsGuard, MemoryCacheService],
   exports: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService, PermissionsService, AuthClaimsGuard],
 })
 export class RbacModule {}

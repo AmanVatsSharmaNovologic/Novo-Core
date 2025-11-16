@@ -149,10 +149,13 @@ export class TokenController {
       if (!tenantId) {
         throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
       }
-      if (!body.refresh_token) {
+      // Accept refresh token from body or HttpOnly cookie 'rt' for first-party clients
+      const cookieRt: string | undefined = ((_req as any)?.cookies?.rt as string | undefined) ?? undefined;
+      const providedRt: string | undefined = body.refresh_token ?? cookieRt;
+      if (!providedRt) {
         throw new HttpException({ code: 'invalid_request', message: 'Missing refresh_token' }, HttpStatus.BAD_REQUEST);
       }
-      const rotated = await this.sessions.rotateRefreshToken(tenantId, body.refresh_token);
+      const rotated = await this.sessions.rotateRefreshToken(tenantId, providedRt);
       const roles = await this.rbac.getUserRoleNames(tenantId, rotated.userId);
       const accessToken = await this.tokens.issueAccessToken(rotated.userId, 'novologic-api', {
         scope: body.scope ?? 'openid profile email',

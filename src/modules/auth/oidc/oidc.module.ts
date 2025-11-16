@@ -30,10 +30,13 @@ import { AuthorizationCodeService } from './services/authorization-code.service'
 import { RbacModule } from '../rbac/rbac.module';
 import { LoginAttemptsService } from './services/login-attempts.service';
 import { LoginAttempt } from '../entities/login-attempt.entity';
+import { Tenant } from '../entities/tenant.entity';
+import { TenantStatusGuard } from '../../../shared/tenancy/tenant-status.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AuthorizationCode, LoginAttempt]),
+    TypeOrmModule.forFeature([AuthorizationCode, LoginAttempt, Tenant]),
     SessionsModule,
     TokensModule,
     AuditModule,
@@ -52,7 +55,15 @@ import { LoginAttempt } from '../entities/login-attempt.entity';
     LoginController,
     ConsentController,
   ],
-  providers: [OpSessionService, AuthorizationCodeService, LoginAttemptsService],
+  providers: [
+    OpSessionService,
+    AuthorizationCodeService,
+    LoginAttemptsService,
+    {
+      provide: APP_GUARD,
+      useClass: TenantStatusGuard,
+    },
+  ],
 })
 export class OidcModule {}
 

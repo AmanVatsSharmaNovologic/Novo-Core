@@ -27,6 +27,9 @@ interface ActiveKey {
 @Injectable()
 export class JwkService {
   private activeKey?: ActiveKey;
+  // Cache for imported public keys by kid to avoid repeated DB and importJWK work
+  private readonly publicKeyCache = new Map<string, { key: KeyLike; expiresAt: number }>();
+  private readonly publicKeyTtlMs = 5 * 60 * 1000; // 5 minutes
 
   constructor(
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
@@ -117,9 +120,24 @@ export class JwkService {
     const header = decodeProtectedHeader(token);
     const kid = header.kid;
     if (!kid) throw new Error('Missing kid');
-    const keyEntity = await this.keyRepo.findOne({ where: { kid } });
-    if (!keyEntity) throw new Error('Unknown key');
-    const publicKey = await importJWK(keyEntity.publicJwk as any, keyEntity.alg);
+    // Use cached imported public key if available and not expired
+    const cached = this.publicKeyCache.get(kid);
+    let publicKey: KeyLike;
+    if (cached && cached.expiresAt > Date.now()) {
+      publicKey = cached.key;
+    } else {
+      const keyEntity = await this.keyRepo.findOne({ where: { kid } });
+      if (!keyEntity) throw new Error('Unknown key');
+      publicKey = (await importJWK(keyEntity.publicJwk as any, keyEntity.alg)) as KeyLike;
+      // refresh LRU ordering and set TTL
+      this.publicKeyCache.delete(kid);
+      this.publicKeyCache.set(kid, { key: publicKey, expiresAt: Date.now() + this.publicKeyTtlMs });
+      // Trim naive LRU if cache grows too large (defensive)
+      if (this.publicKeyCache.size > 2000) {
+        const oldest = this.publicKeyCache.keys().next().value as string | undefined;
+        if (oldest) this.publicKeyCache.delete(oldest);
+      }
+    }
     const { payload } = await jwtVerify(token, publicKey, {
       issuer: this.config.domain.issuerUrl,
     });
