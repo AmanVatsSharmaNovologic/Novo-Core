@@ -3,7 +3,7 @@
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Token endpoint (code exchange + refresh + client_credentials)
 * Author: Cursor / BharatERP
-* Last-updated: 2025-11-15
+* Last-updated: 2025-11-19
 */
 
 import { Body, Controller, HttpException, HttpStatus, Post, Res, UsePipes, ValidationPipe } from '@nestjs/common';
@@ -65,6 +65,36 @@ export class TokenController {
     private readonly passwords: PasswordService,
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
   ) {}
+
+  /**
+   * Set HttpOnly cookies for first-party browser flows.
+   * - `rt`: long-lived refresh token (30d)
+   * - `at`: short-lived access token (aligned with access token TTL, 5m)
+   */
+  private setSessionCookies(res: Response, accessToken: string, refreshToken: string, includeAccessToken: boolean) {
+    const sameSite = this.config.cookie.sameSite === 'none' ? 'none' : this.config.cookie.sameSite;
+    const common = {
+      httpOnly: true,
+      secure: this.config.cookie.secure,
+      sameSite,
+      domain: this.config.cookie.domain,
+      path: '/',
+    } as const;
+
+    // Refresh token cookie (30 days)
+    res.cookie('rt', refreshToken, {
+      ...common,
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+    });
+
+    if (includeAccessToken) {
+      // Access token cookie (5 minutes) – allows browser-only flows with credentials: 'include'
+      res.cookie('at', accessToken, {
+        ...common,
+        maxAge: 1000 * 60 * 5,
+      });
+    }
+  }
 
   @Post()
   @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
@@ -169,14 +199,8 @@ export class TokenController {
         type: 'token.refresh',
         resource: rotated.sessionId,
       });
-      res.cookie('rt', rotated.refreshToken, {
-        httpOnly: true,
-        secure: this.config.cookie.secure,
-        sameSite: this.config.cookie.sameSite === 'none' ? 'none' : this.config.cookie.sameSite,
-        domain: this.config.cookie.domain,
-        path: '/',
-        maxAge: 1000 * 60 * 60 * 24 * 30,
-      });
+      // On refresh, always set cookies so first-party SPAs can rely on HttpOnly cookies.
+      this.setSessionCookies(res, accessToken, rotated.refreshToken, true);
       return {
         token_type: 'Bearer',
         access_token: accessToken,
@@ -232,14 +256,8 @@ export class TokenController {
         roles,
       });
       if (client.firstParty) {
-        res.cookie('rt', refreshToken, {
-          httpOnly: true,
-          secure: this.config.cookie.secure,
-          sameSite: this.config.cookie.sameSite === 'none' ? 'none' : this.config.cookie.sameSite,
-          domain: this.config.cookie.domain,
-          path: '/',
-          maxAge: 1000 * 60 * 60 * 24 * 30,
-        });
+        // For first-party clients, set both refresh and access token cookies.
+        this.setSessionCookies(res, accessToken, refreshToken, true);
       }
       await this.audit.logEvent({
         tenantId,

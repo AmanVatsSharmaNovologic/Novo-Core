@@ -1,10 +1,20 @@
 # Auth Module (NovoLogic)
 
-- OIDC Provider at `https://auth.novologic.co`
-- REST: `/.well-known/openid-configuration`, `/jwks.json`, `/authorize`, `/token`, `/userinfo`, `/introspect`, `/revoke`
+- Auth host (current deployment): `https://api.novologic.co`
+  - You may optionally expose a CNAME like `https://auth.novologic.co` that points to the same service.
+- REST (OIDC surface): `/.well-known/openid-configuration`, `/jwks.json`, `/authorize`, `/token`, `/userinfo`, `/introspect`, `/revoke`
 - GraphQL management at `/graphql` for tenants and users
 - Sessions + refresh rotation, MFA (TOTP), RBAC, audit logging
- - Machine-to-machine via `client_credentials` (JWT 5m, no refresh)
+- Machine-to-machine via `client_credentials` (JWT 5m, no refresh)
+
+## Host & path matrix
+
+- If `GLOBAL_PREFIX` is empty (recommended):  
+  - Issuer: `https://api.novologic.co`  
+  - Endpoints: `https://api.novologic.co/authorize`, `/token`, `/userinfo`, etc.
+- If `GLOBAL_PREFIX=api`:  
+  - Issuer: `https://api.novologic.co`  
+  - Endpoints: `https://api.novologic.co/api/authorize`, `/api/token`, `/api/userinfo`, etc.
 
 Notes:
 - First‑party refresh: `/token` will read `rt` HttpOnly cookie if `refresh_token` body param is absent.

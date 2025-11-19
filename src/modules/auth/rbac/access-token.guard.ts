@@ -1,7 +1,7 @@
 /**
  * @file access-token.guard.ts
  * @module modules/auth/rbac
- * @description Guard that verifies Bearer access token via JWKS and attaches claims to req.user.
+ * @description Guard that verifies access tokens (Authorization header or HttpOnly cookie) via JWKS and attaches claims to req.user.
  * @author BharatERP
  * @created 2025-11-08
  */
@@ -16,10 +16,27 @@ export class AccessTokenGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
     const authorization: string | undefined = req.headers?.authorization;
-    if (!authorization || !authorization.startsWith('Bearer ')) {
+    const headerToken =
+      authorization && authorization.startsWith('Bearer ')
+        ? authorization.slice('Bearer '.length)
+        : undefined;
+
+    // Prefer Authorization header (API clients), but support HttpOnly cookie `at` for browser flows.
+    if (headerToken) {
+      const ok = await this.verifyAndAttach(req, headerToken);
+      if (ok) return true;
+      // If header token is invalid, do not silently fall back to cookie – treat as unauthorized.
       return false;
     }
-    const token = authorization.slice('Bearer '.length);
+
+    const cookieToken: string | undefined = (req.cookies?.at as string | undefined) ?? undefined;
+    if (!cookieToken) {
+      return false;
+    }
+    return this.verifyAndAttach(req, cookieToken);
+  }
+
+  private async verifyAndAttach(req: any, token: string): Promise<boolean> {
     try {
       const { payload } = await this.jwk.verifyJwt(token);
       // Attach claims to request for downstream guards/controllers
@@ -30,5 +47,4 @@ export class AccessTokenGuard implements CanActivate {
     }
   }
 }
-
 

@@ -74,6 +74,12 @@ describe('Auth Flows (e2e)', () => {
       .expect(201);
     expect(res.body.access_token).toBeTruthy();
     expect(res.body.expires_in).toBe(300);
+    // Client credentials should not issue browser cookies (no rt/at)
+    const setCookies = res.headers['set-cookie'] as string[] | undefined;
+    const rt = getCookieValue(setCookies, 'rt');
+    const at = getCookieValue(setCookies, 'at');
+    expect(rt).toBeUndefined();
+    expect(at).toBeUndefined();
   });
 
   it('Introspect active token and revoke refresh token chain', async () => {
@@ -202,9 +208,16 @@ describe('Auth Flows (e2e)', () => {
       .expect(201);
     expect(tokenRes.body.access_token).toBeTruthy();
     expect(tokenRes.body.refresh_token).toBeTruthy();
-    // For first-party client, rt cookie is set
-    const rtCookie = getCookieValue(tokenRes.headers['set-cookie'] as string[] | undefined, 'rt');
+    // For first-party client, rt and at cookies are set
+    const setCookies = tokenRes.headers['set-cookie'] as string[] | undefined;
+    const rtCookie = getCookieValue(setCookies, 'rt');
     expect(rtCookie).toBeTruthy();
+    const atCookie = getCookieValue(setCookies, 'at');
+    expect(atCookie).toBeTruthy();
+
+    // Using only the cookies (no Authorization header), we can hit a protected route
+    const protectedRes = await agent.get('/').set('x-tenant-id', tenantId).expect(200);
+    expect(protectedRes.text || protectedRes.body).toBeTruthy();
   });
 
   it('Refresh token rotation using rt cookie fallback and reuse detection', async () => {
@@ -221,9 +234,12 @@ describe('Auth Flows (e2e)', () => {
       .send({ grant_type: 'refresh_token' })
       .expect(201);
     expect(refresh1.body.access_token).toBeTruthy();
-    const newRt = getCookieValue(refresh1.headers['set-cookie'] as string[] | undefined, 'rt');
+    const refreshSetCookies = refresh1.headers['set-cookie'] as string[] | undefined;
+    const newRt = getCookieValue(refreshSetCookies, 'rt');
     expect(newRt).toBeTruthy();
     expect(newRt).not.toEqual(currentRt);
+    const newAt = getCookieValue(refreshSetCookies, 'at');
+    expect(newAt).toBeTruthy();
 
     // Reuse old refresh token must fail
     const reuse = await agent

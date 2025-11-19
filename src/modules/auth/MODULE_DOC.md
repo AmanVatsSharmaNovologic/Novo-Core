@@ -1,11 +1,11 @@
 ---
 title: Auth Module (Hybrid Auth)
 description: OIDC REST for product UIs + GraphQL for admin/management
-updated: 2025-11-15 (IST)
+updated: 2025-11-19 (IST)
 ---
 
 ## What this module provides
-- OIDC Provider at `https://auth.novologic.co` (REST) for user login/session:
+- OIDC Provider at `https://api.novologic.co` (REST) for user login/session:
   - `/.well-known/openid-configuration`, `/jwks.json`
   - `/authorize` (code + PKCE), `/token` (code→token, refresh), `/userinfo`, `/introspect`, `/revoke`
   - `/login` (HTML form), `/consent` (HTML confirm scopes)
@@ -39,7 +39,9 @@ Access token claims now include:
 - `org_id`: active organisation (tenant) ID
 - `sid`: session ID
 - `roles`: array of role names within the active org
-Refresh token: HttpOnly cookie `rt` for first‑party clients (`Client.firstParty=true`)
+Refresh / access cookies for browser flows:
+- `rt`: HttpOnly refresh token cookie for first‑party clients (`Client.firstParty=true`, 30d)
+- `at`: HttpOnly access token cookie (≈5m) for first‑party browser clients, used by GlobalAuthGuard when no Authorization header is present
 
 ### Machine-to-machine (client_credentials)
 ```mermaid
@@ -53,50 +55,21 @@ sequenceDiagram
 
 ## Front‑end quick start (PKCE, SPA)
 
-1) Register a client (admin does this). Example:  
-   `clientId=app-spa`, `redirect_uris=["https://app.novologic.co/callback"]`, `grant_types=["authorization_code","refresh_token"]`, `firstParty=true`
-2) Build PKCE in the browser:
-```ts
-// pseudo-code
-const verifier = base64url(randomBytes(32));
-const challenge = base64url(sha256(verifier));
-const authUrl = new URL('https://auth.novologic.co/authorize');
-authUrl.search = new URLSearchParams({
-  client_id: 'app-spa',
-  redirect_uri: 'https://app.novologic.co/callback',
-  response_type: 'code',
-  scope: 'openid profile email offline_access',
-  state: randomState(),
-  code_challenge: challenge,
-  code_challenge_method: 'S256'
-}).toString();
-location.assign(authUrl.toString());
-```
-3) On callback, exchange code → tokens:
-```bash
-curl -X POST https://auth.novologic.co/token \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=authorization_code' \
-  -d 'client_id=app-spa' \
-  -d 'code=...from_callback...' \
-  -d 'code_verifier=...your_verifier...' \
-  -d 'redirect_uri=https://app.novologic.co/callback'
-```
-• Response: `{ access_token, token_type, expires_in, refresh_token }`  
-• For first‑party clients, server also sets `rt` HttpOnly cookie (Domain `.novologic.co`, SameSite=Lax).
+For a concrete Next.js example targeting `https://sandbox2.novologic.co`, see `src/modules/auth/FRONTEND_GUIDE.md`.
 
-4) Call APIs with the access token:
-```http
-GET https://api.novologic.co/v1/…
-Authorization: Bearer <access_token>
-```
-5) Refresh when near expiry (client or BFF):
-```bash
-curl -X POST https://auth.novologic.co/token \
-  -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'grant_type=refresh_token' \
-  -d 'refresh_token=<from_previous_response>'   # or rely on HttpOnly cookie 'rt'
-```
+High‑level:
+
+1. Register a first‑party SPA client (admin step):  
+   - `clientId=app-spa`  
+   - `redirect_uris=["https://sandbox2.novologic.co/auth/callback"]`  
+   - `grant_types=["authorization_code","refresh_token"]`  
+   - `firstParty=true`
+2. Browser builds a PKCE pair and redirects user to `https://api.novologic.co/authorize`.
+3. On callback, SPA exchanges `code` for tokens at `POST https://api.novologic.co/token` with `grant_type=authorization_code` and `credentials: 'include'`.
+   - Response: `{ access_token, token_type, expires_in, refresh_token }`  
+   - Cookies: `rt` (30d) + `at` (5m) are set for `.novologic.co`.
+4. Product APIs at `https://api.novologic.co/v1/...` are called from the browser with `credentials: 'include'` and `x-tenant-id`, relying on `at` cookie.
+5. Silent refresh: SPA calls `POST https://api.novologic.co/token` with `grant_type=refresh_token` and `credentials: 'include'` to rotate `rt` and refresh `at`.
 
 ## Data model (simplified)
 - Tenant(id, slug, name, status)
