@@ -18,7 +18,7 @@ rollback() {
         exit $code
       fi
       sleep 10
-    end
+    done
   fi
   docker compose -f docker-compose.prod.yml logs --no-color --since=10m app || true
   exit $code
