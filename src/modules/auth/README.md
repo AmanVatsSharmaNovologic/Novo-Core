@@ -25,8 +25,10 @@ For details, read the subfolder READMEs below.
 ## Quick Links
 - Module docs: [MODULE_DOC.md](./MODULE_DOC.md)
 - Frontend guide: [FRONTEND_GUIDE.md](./FRONTEND_GUIDE.md)
+- Resource-server guide (Node/NestJS): [RESOURCE_SERVER_GUIDE.md](./RESOURCE_SERVER_GUIDE.md)
 
 ## Changelog (docs)
+- 2025‑11‑22: Linked RESOURCE_SERVER_GUIDE and documented resource-server entrypoint.
 - 2025‑11‑15: Added per‑folder README coverage and enhanced summaries.
 
 

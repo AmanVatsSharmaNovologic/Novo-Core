@@ -33,7 +33,7 @@
   - `POST https://api.novologic.co/management/invitations/accept`
 
 **Scopes**: `openid`, `profile`, `email`, `offline_access`  
-**Tokens**: Access token is JWT RS256, `aud=novologic-api`, with claims `org_id`, `sid`, `roles`.
+**Tokens**: Access token is JWT RS256, `aud=novologic-api`, with claims `org_id`, `sid`, `roles`, and a cached `permissions[]` array derived from RBAC.
 
 ---
 
@@ -327,6 +327,11 @@ export async function logout() {
 GET https://api.novologic.co/.well-known/openid-configuration
 GET https://api.novologic.co/jwks.json
 ```
+
+> Note: Frontends typically do **not** inspect `permissions[]` directly.
+> Instead, they rely on backend APIs to enforce authorization using the
+> token’s claims. The permissions array is primarily for backend
+> microservices and debugging.
 
 ---
 

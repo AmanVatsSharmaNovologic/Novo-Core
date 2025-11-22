@@ -1,13 +1,13 @@
 ---
 title: Auth Module (Hybrid Auth)
 description: OIDC REST for product UIs + GraphQL for admin/management
-updated: 2025-11-19 (IST)
+updated: 2025-11-22 (IST)
 ---
 
 ## What this module provides
 - OIDC Provider at `https://api.novologic.co` (REST) for user login/session:
   - `/.well-known/openid-configuration`, `/jwks.json`
-  - `/authorize` (code + PKCE), `/token` (code→token, refresh), `/userinfo`, `/introspect`, `/revoke`
+  - `/authorize` (code + PKCE), `/token` (code→token, refresh, client_credentials), `/userinfo`, `/introspect`, `/revoke`
   - `/login` (HTML form), `/consent` (HTML confirm scopes)
 - GraphQL Admin API at `/graphql` (for internal consoles / back‑office):
   - `tenants()` list, `users(tenantId)`, `registerUser(input)` (more admin CRUD to be added)
@@ -17,6 +17,7 @@ updated: 2025-11-19 (IST)
 - Root overview: `src/modules/auth/README.md`
 - Submodules and deep docs: see each folder’s `README.md`:
   - `audit/`, `clients/`, `entities/`, `management/` (and its `controllers/`, `dtos/`), `mfa/`, `oidc/` (and its `controllers/`, `services/`, `views/`, `ui/`), `oidc-provider/`, `passwords/`, `rbac/`, `sessions/` (and its `services/`), `tokens/`
+- Resource servers (Node/NestJS): `src/modules/auth/RESOURCE_SERVER_GUIDE.md`
 
 ## REST surface (for product/front‑end)
 
@@ -25,25 +26,23 @@ updated: 2025-11-19 (IST)
 | GET    | `/.well-known/openid-configuration`    | OIDC metadata (issuer, endpoints)  |
 | GET    | `/jwks.json`                           | Public signing keys (RS256)        |
 | GET    | `/authorize`                           | Start OAuth2 Authorization Code + PKCE redirect |
-| GET    | `/login`                                | OP login form (email/password)     |
-| GET    | `/consent`                              | Scope consent screen               |
-| POST   | `/token` (form or JSON)                 | `authorization_code` → tokens, `refresh_token`, `client_credentials` |
-| GET    | `/userinfo` (Bearer access_token)       | Basic OIDC claims (sub, email, …)  |
-| POST   | `/introspect`                           | RFC 7662 token status              |
-| POST   | `/revoke`                                | Revoke refresh token               |
+| GET    | `/login`                               | OP login form (email/password)     |
+| GET    | `/consent`                             | Scope consent screen               |
+| POST   | `/token` (form or JSON)                | `authorization_code` → tokens, `refresh_token`, `client_credentials` |
+| GET    | `/userinfo` (Bearer access_token)      | Basic OIDC claims (sub, email, …)  |
+| POST   | `/introspect`                          | RFC 7662 token status + selected claims |
+| POST   | `/revoke`                              | Revoke refresh token               |
 
 Scopes: `openid`, `profile`, `email`, `offline_access`  
 Signing: RS256 with `kid`; JWKS at `/jwks.json`  
 Access token `aud`: `novologic-api` (set in `TokenService`)  
-Access token claims now include:
-- `org_id`: active organisation (tenant) ID
-- `sid`: session ID
-- `roles`: array of role names within the active org
+
 Refresh / access cookies for browser flows:
 - `rt`: HttpOnly refresh token cookie for first‑party clients (`Client.firstParty=true`, 30d)
 - `at`: HttpOnly access token cookie (≈5m) for first‑party browser clients, used by GlobalAuthGuard when no Authorization header is present
 
 ### Machine-to-machine (client_credentials)
+
 ```mermaid
 sequenceDiagram
   autonumber
@@ -51,6 +50,49 @@ sequenceDiagram
   participant AUTH as Auth (/token)
   SVC->>AUTH: POST /token (grant_type=client_credentials, Basic client_id:secret)
   AUTH-->>SVC: 200 { access_token, token_type, expires_in, scope }
+```
+
+## Access token claim shape
+
+User access tokens (issued for interactive users) contain:
+
+- `sub: string` – user ID
+- `org_id?: string` – active organisation (tenant) ID
+- `sid?: string` – session ID
+- `roles?: string[]` – role names within the active org
+- `permissions?: string[]` – effective permission keys (derived from RBAC tables)
+- `scope?: string` – OAuth2 scopes (space‑separated)
+- Standard JWT fields: `iss`, `aud`, `exp`, `iat`, `nbf`
+
+Client‑credentials access tokens (machine‑to‑machine) contain:
+
+- `sub: string` – of the form `client:<clientId>`
+- `org_id?: string` – tenant ID
+- `scope?: string` – granted scopes
+- `grant: 'client_credentials'`
+- `azp: string` – authorized party (`clientId`)
+- Standard JWT fields: `iss`, `aud`, `exp`, `iat`
+
+> **TTL and staleness**  
+> Access token TTL is ≈5 minutes. Embedded `permissions[]` reflect the RBAC
+> state at issuance time and may lag RBAC changes until the token expires.
+> The database (via `PermissionsService`) remains the source of truth.
+
+Example (decoded user access token payload):
+
+```json
+{
+  "sub": "user-uuid",
+  "org_id": "tenant-uuid",
+  "sid": "session-uuid",
+  "roles": ["admin", "viewer"],
+  "permissions": ["org:read", "org:write", "project:read"],
+  "scope": "openid profile email offline_access",
+  "iss": "https://api.novologic.co",
+  "aud": "novologic-api",
+  "iat": 1732250000,
+  "exp": 1732250300
+}
 ```
 
 ## Front‑end quick start (PKCE, SPA)
@@ -84,6 +126,7 @@ High‑level:
 - AuditEvent(id, tenantId, actorId?, type, resource, metadata, createdAt)
 
 ## Request flow (high level)
+
 ```mermaid
 flowchart LR
   A[Login] --> B[Authorize (code+PKCE)]
@@ -93,7 +136,9 @@ flowchart LR
   E --> F[Rotate RT on refresh]
   F -->|reuse detection| G[Revoke chain + alert]
 ```
+
 Revocation:
+
 ```mermaid
 sequenceDiagram
   autonumber
@@ -129,9 +174,21 @@ Admin GraphQL (internal tooling)
 - `/graphql` (Apollo): `tenants()`, `users(tenantId)`, `registerUser(input)`
 - Extend with Role/Permission/Client admin as needed
 
+## Path to centralized AuthZ
+
+Today, permissions are:
+
+- Computed inside the Auth module from the RBAC tables (`Role`, `Permission`, `UserRole`, `RolePermission`); and
+- Embedded into access tokens as `permissions[]` for fast checks in Node/NestJS microservices.
+
+In a future **centralized AuthZ** service, we can:
+
+- Keep JWTs as the primary identity and tenancy carrier (`sub`, `org_id`, `roles`, `scope`); and
+- Expose the same RBAC logic over HTTP/gRPC for live authorization decisions (e.g. `POST /authz/check`), with microservices calling it when they need stronger consistency than the cached `permissions[]` in the token.
+
 ## Changelog
+- 2025‑11‑22: Added permissions to access tokens; updated docs with claim shape, resource-server link, and AuthZ roadmap.
 - 2025‑11‑16: Added refresh cookie fallback; in‑memory caches (permissions, JWKS verify); TenantStatusGuard on OIDC/Management; GraphQL Auth guard (optional); E2E tests via Testcontainers.
 - 2025‑11‑15: Added client_credentials grant; refresh token revocation; GlobalAuthGuard + AuthClaimsGuard; permission service (DB); tenant guard; CSRF on login/consent; failed-login tracking; RBAC management endpoints.
 - 2025‑11‑08: Added org-scoped access token claims (`org_id`, `sid`, `roles`); client hardening (grant/scopes/secret checks); audit logs for login/consent; scaffolded `oidc-provider` module behind `OIDC_PROVIDER=true`; introduced `identities` and `memberships` tables with migrations.
-
 

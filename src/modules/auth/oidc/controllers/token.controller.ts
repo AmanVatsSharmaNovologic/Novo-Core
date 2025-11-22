@@ -18,6 +18,7 @@ import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.typ
 import { Inject } from '@nestjs/common';
 import { RbacService } from '../../rbac/rbac.service';
 import { PasswordService } from '../../passwords/services/password.service';
+import { PermissionsService } from '../../rbac/permissions.service';
 import { IsIn, IsOptional, IsString } from 'class-validator';
 
 class TokenRequestDto {
@@ -63,6 +64,7 @@ export class TokenController {
     private readonly clients: ClientService,
     private readonly rbac: RbacService,
     private readonly passwords: PasswordService,
+    private readonly permissions: PermissionsService,
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
   ) {}
 
@@ -187,11 +189,13 @@ export class TokenController {
       }
       const rotated = await this.sessions.rotateRefreshToken(tenantId, providedRt);
       const roles = await this.rbac.getUserRoleNames(tenantId, rotated.userId);
+      const permissions = await this.permissions.getPermissionsForUser(tenantId, rotated.userId);
       const accessToken = await this.tokens.issueAccessToken(rotated.userId, 'novologic-api', {
         scope: body.scope ?? 'openid profile email',
         org_id: tenantId,
         sid: rotated.sessionId,
         roles,
+        permissions,
       });
       await this.audit.logEvent({
         tenantId,
@@ -249,11 +253,13 @@ export class TokenController {
         userId: consumed.userId,
       });
       const roles = await this.rbac.getUserRoleNames(tenantId, consumed.userId);
+      const permissions = await this.permissions.getPermissionsForUser(tenantId, consumed.userId);
       const accessToken = await this.tokens.issueAccessToken(consumed.userId, 'novologic-api', {
         scope: consumed.scope ?? 'openid profile email',
         org_id: tenantId,
         sid: session.id,
         roles,
+        permissions,
       });
       if (client.firstParty) {
         // For first-party clients, set both refresh and access token cookies.

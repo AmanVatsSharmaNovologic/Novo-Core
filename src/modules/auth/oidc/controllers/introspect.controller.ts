@@ -31,6 +31,9 @@ export class IntrospectController {
         iss: payload.iss,
         aud: payload.aud,
         scope: (payload as any).scope,
+        org_id: (payload as any).org_id,
+        roles: (payload as any).roles,
+        permissions: (payload as any).permissions,
       };
     } catch {
       return { active: false };
