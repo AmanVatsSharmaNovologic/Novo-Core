@@ -6,8 +6,8 @@
  * @created 2025-11-16
  */
 
-import { Injectable } from '@nestjs/common';
-import { CacheOptions, CacheProvider } from './cache.types';
+import { Inject, Injectable } from '@nestjs/common';
+import { CacheOptions, CacheProvider, MEMORY_CACHE_OPTIONS } from './cache.types';
 
 interface CacheEntry<T = unknown> {
   value: T;
@@ -20,9 +20,12 @@ export class MemoryCacheService implements CacheProvider {
   private readonly maxEntries: number;
   private readonly defaultTtlMs: number;
 
-  constructor(options: CacheOptions = { maxEntries: 5000, defaultTtlMs: 60_000 }) {
-    this.maxEntries = options.maxEntries ?? 5000;
-    this.defaultTtlMs = options.defaultTtlMs ?? 60_000;
+  constructor(
+    @Inject(MEMORY_CACHE_OPTIONS) options: CacheOptions,
+  ) {
+    const resolved: CacheOptions = options ?? {};
+    this.maxEntries = resolved.maxEntries ?? 5000;
+    this.defaultTtlMs = resolved.defaultTtlMs ?? 60_000;
   }
 
   async get<T = unknown>(key: string): Promise<T | undefined> {

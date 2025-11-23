@@ -17,4 +17,7 @@ export interface CacheOptions {
   defaultTtlMs?: number;
 }
 
+// DI token used to configure MemoryCacheService options via Nest providers.
+export const MEMORY_CACHE_OPTIONS = 'MEMORY_CACHE_OPTIONS';
+
 

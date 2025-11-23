@@ -1,12 +1,12 @@
 /**
-* File: src/modules/auth/rbac/rbac.module.ts
-* Module: modules/auth/rbac
-* Purpose: RBAC module exposing guards and decorators
-* Author: Cursor / BharatERP
-* Last-updated: 2025-11-08
-* Notes:
-* - Register PolicyGuard locally or globally as needed
-*/
+ * File: src/modules/auth/rbac/rbac.module.ts
+ * Module: modules/auth/rbac
+ * Purpose: RBAC module exposing guards and decorators
+ * Author: Cursor / BharatERP
+ * Last-updated: 2025-11-24
+ * Notes:
+ * - Register PolicyGuard locally or globally as needed
+ */
 
 import { Module } from '@nestjs/common';
 import { PolicyGuard } from './policy.guard';
@@ -20,11 +20,11 @@ import { RolePermission } from '../entities/role-permission.entity';
 import { Permission } from '../entities/permission.entity';
 import { PermissionsService } from './permissions.service';
 import { AuthClaimsGuard } from './auth-claims.guard';
-import { MemoryCacheService } from '../../../shared/cache/memory-cache.service';
+import { CacheModule } from '../../../shared/cache/cache.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserRole, Role, RolePermission, Permission])],
-  providers: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService, PermissionsService, AuthClaimsGuard, MemoryCacheService],
+  imports: [TypeOrmModule.forFeature([UserRole, Role, RolePermission, Permission]), CacheModule],
+  providers: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService, PermissionsService, AuthClaimsGuard],
   exports: [PolicyGuard, ScopesGuard, AccessTokenGuard, RbacService, PermissionsService, AuthClaimsGuard],
 })
 export class RbacModule {}

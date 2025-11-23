@@ -26,4 +26,25 @@ export function createComplexityValidationRule(maxComplexity = 2000) {
   });
 }
 
+/**
+ * Lightweight GraphQL Yoga plugin that attaches the complexity validation rule
+ * to the validation phase. This keeps our Nest Yoga configuration clean while
+ * still enforcing maximum query complexity.
+ */
+export function createComplexityPlugin(maxComplexity = 2000) {
+  return {
+    // The Yoga plugin system will call this hook before executing a request.
+    // We use it to register the complexity validation rule for the operation.
+    onValidate({
+      addValidationRule,
+    }: {
+      // Narrow inline type to avoid importing Yoga types while keeping TS happy.
+      addValidationRule: (rule: unknown) => void;
+    }) {
+      addValidationRule(createComplexityValidationRule(maxComplexity));
+    },
+  };
+}
+
+
 

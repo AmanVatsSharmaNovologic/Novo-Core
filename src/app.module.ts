@@ -30,7 +30,7 @@ import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { ManagementModule } from './modules/auth/management/management.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ObservabilityModule } from './modules/observability/observability.module';
-import { createComplexityValidationRule } from './shared/graphql/graphql-complexity';
+import { createComplexityPlugin } from './shared/graphql/graphql-complexity';
 import { GlobalAuthGuard } from './modules/auth/rbac/global-auth.guard';
 
 @Module({
@@ -50,8 +50,8 @@ import { GlobalAuthGuard } from './modules/auth/rbac/global-auth.guard';
       driver: YogaDriver,
       autoSchemaFile: true,
       sortSchema: true,
-      validationRules: [createComplexityValidationRule(1500)],
-      plugins: [useCSRFPrevention()],
+      // CSRF protection plugin plus query complexity guard to prevent abusive queries.
+      plugins: [useCSRFPrevention(), createComplexityPlugin(1500)],
       graphiql: process.env.NODE_ENV !== 'production',
       context: ({ req }) => ({ requestId: (req as any).requestId }),
     }),
