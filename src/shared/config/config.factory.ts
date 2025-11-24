@@ -14,7 +14,7 @@ import * as dotenv from 'dotenv';
 try {
   dotenv.config();
 } catch {}
-
+ 
 import { z } from 'zod';
 import { AppConfig, NodeEnvironment } from './config.types';
 
