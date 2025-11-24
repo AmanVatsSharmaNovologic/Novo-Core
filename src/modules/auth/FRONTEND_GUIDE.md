@@ -10,7 +10,8 @@
   - `rt`: HttpOnly refresh token cookie (30 days)
   - `at`: HttpOnly access token cookie (≈5 minutes)
 - **Tenancy**:
-  - Use `x-tenant-id: <tenant-uuid>` on all `/authorize`, `/token`, `/introspect`, `/revoke`, and API calls when not using tenant subdomains.
+  - For the main dashboard SPA (`client_id=app-spa` on `sandbox2.novologic.co` / `app.novologic.co`), `/authorize` does **not** require `x-tenant-id`; the auth server resolves the global realm client by `client_id` only.
+  - For product APIs and service-to-service calls, use `x-tenant-id: <tenant-uuid>` on `/token` (non-dashboard grants), `/introspect`, `/revoke`, and API calls when not using tenant subdomains.
 
 ---
 
@@ -60,7 +61,6 @@ Add (at least) these env vars:
 ```ts
 // utils/auth/startLogin.ts
 export async function startLogin() {
-  const tenantId = process.env.NEXT_PUBLIC_TENANT_ID!;
   const authBase = process.env.NEXT_PUBLIC_AUTH_BASE_URL!;
 
   const enc = (b: ArrayBuffer) =>
@@ -85,9 +85,6 @@ export async function startLogin() {
     code_challenge: challenge,
     code_challenge_method: 'S256',
   }).toString();
-
-  // Tenant is resolved from header by the gateway; here we put it into the query if needed
-  url.searchParams.set('x-tenant-id', tenantId);
 
   window.location.assign(url.toString());
 }
