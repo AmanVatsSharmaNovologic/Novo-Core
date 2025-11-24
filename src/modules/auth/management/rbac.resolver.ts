@@ -26,7 +26,7 @@ import { UpdateRolePermissionsInput } from './dtos/update-role-permissions.input
 @UseGuards(GraphqlAuthGuard)
 export class RbacResolverGql {
   constructor(
-    @InjectRepository(Role) private readonly roles: Repository<Role>,
+    @InjectRepository(Role) private readonly roleRepo: Repository<Role>,
     @InjectRepository(Permission) private readonly perms: Repository<Permission>,
     @InjectRepository(RolePermission) private readonly rolePerms: Repository<RolePermission>,
     private readonly rbac: RbacService,
@@ -38,7 +38,7 @@ export class RbacResolverGql {
   async roles(@Args('tenantId', { type: () => String }) tenantId: string): Promise<RoleGql[]> {
     this.ensureTenantScope(tenantId);
     await this.ensureAdminOrOwner(tenantId);
-    const rows = await this.roles.find({ where: { tenantId }, order: { name: 'ASC' } });
+    const rows = await this.roleRepo.find({ where: { tenantId }, order: { name: 'ASC' } });
     return rows.map((r) => ({
       id: r.id,
       tenantId: r.tenantId,
@@ -66,16 +66,16 @@ export class RbacResolverGql {
     await this.ensureAdminOrOwner(input.tenantId);
 
     const name = input.name.toLowerCase();
-    const exists = await this.roles.findOne({ where: { tenantId: input.tenantId, name } });
+    const exists = await this.roleRepo.findOne({ where: { tenantId: input.tenantId, name } });
     if (exists) {
       throw new HttpException({ code: 'ROLE_EXISTS' }, HttpStatus.CONFLICT);
     }
-    const row = this.roles.create({
+    const row = this.roleRepo.create({
       tenantId: input.tenantId,
       name,
       description: input.description,
     });
-    const saved = await this.roles.save(row);
+    const saved = await this.roleRepo.save(row);
 
     const actorId = RequestContext.get()?.userId;
     await this.audit.logEvent({
@@ -103,7 +103,7 @@ export class RbacResolverGql {
     this.ensureTenantScope(input.tenantId);
     await this.ensureAdminOrOwner(input.tenantId);
 
-    const role = await this.roles.findOne({ where: { id: input.roleId, tenantId: input.tenantId } });
+    const role = await this.roleRepo.findOne({ where: { id: input.roleId, tenantId: input.tenantId } });
     if (!role) {
       throw new HttpException({ code: 'ROLE_NOT_FOUND' }, HttpStatus.NOT_FOUND);
     }
