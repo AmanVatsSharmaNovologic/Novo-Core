@@ -108,4 +108,25 @@ export class OrgMemberGql {
   roles!: string[];
 }
 
+@ObjectType()
+export class InvitationResultGql {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  tenantId!: string;
+
+  @Field()
+  email!: string;
+
+  @Field()
+  roleName!: string;
+
+  @Field()
+  token!: string;
+
+  @Field()
+  expiresAt!: string;
+}
+
 

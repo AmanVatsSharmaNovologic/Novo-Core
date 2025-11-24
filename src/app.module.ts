@@ -53,7 +53,10 @@ import { GlobalAuthGuard } from './modules/auth/rbac/global-auth.guard';
       // CSRF protection plugin plus query complexity guard to prevent abusive queries.
       plugins: [useCSRFPrevention(), createComplexityPlugin(1500)],
       graphiql: process.env.NODE_ENV !== 'production',
-      context: ({ req }) => ({ requestId: (req as any).requestId }),
+      // Expose the underlying HTTP request so GraphqlAuthGuard and other
+      // HTTP-oriented guards can operate correctly, while still surfacing
+      // requestId for resolvers.
+      context: ({ req }) => ({ req, requestId: (req as any).requestId }),
     }),
     AuthModule,
     // OidcModule, // now aggregated
