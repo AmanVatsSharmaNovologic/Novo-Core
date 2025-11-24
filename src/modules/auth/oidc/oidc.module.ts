@@ -34,10 +34,15 @@ import { Tenant } from '../entities/tenant.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { TenantStatusGuard } from '../../../shared/tenancy/tenant-status.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { Identity } from '../entities/identity.entity';
+import { User } from '../entities/user.entity';
+import { Membership } from '../entities/membership.entity';
+import { PublicRegistrationService } from './services/public-registration.service';
+import { RegistrationController } from './controllers/registration.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AuthorizationCode, LoginAttempt, Tenant, RefreshToken]),
+    TypeOrmModule.forFeature([AuthorizationCode, LoginAttempt, Tenant, RefreshToken, Identity, User, Membership]),
     SessionsModule,
     TokensModule,
     AuditModule,
@@ -54,12 +59,14 @@ import { APP_GUARD } from '@nestjs/core';
     IntrospectController,
     RevokeController,
     LoginController,
+    RegistrationController,
     ConsentController,
   ],
   providers: [
     OpSessionService,
     AuthorizationCodeService,
     LoginAttemptsService,
+    PublicRegistrationService,
     {
       provide: APP_GUARD,
       useClass: TenantStatusGuard,

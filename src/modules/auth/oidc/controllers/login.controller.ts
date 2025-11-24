@@ -83,16 +83,47 @@ export class LoginController {
     @Res() res: Response,
   ) {
     const tenantId = RequestContext.get()?.tenantId;
-    if (!tenantId) throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
+    if (!tenantId) {
+      this.logger.warn({ clientId, redirectUri }, 'Login attempt without tenant in context');
+      throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
+    }
     const ip = (res.req as any).ip as string | undefined || (res.req.socket?.remoteAddress as string | undefined) || '';
     const ua = (res.req.headers['user-agent'] as string | undefined) || '';
+    const csrfToken = randomUUID();
+    res.cookie('csrf', csrfToken, {
+      httpOnly: false,
+      secure: this.config.cookie.secure,
+      sameSite: this.config.cookie.sameSite === 'none' ? 'none' : this.config.cookie.sameSite,
+      domain: this.config.cookie.domain,
+      path: '/',
+      maxAge: 1000 * 60 * 15,
+    });
+    const renderWithError = (status: number, message: string) => {
+      this.logger.debug(
+        { tenantId, email, clientId, ip, status },
+        'Rendering login page with error',
+      );
+      return res.status(status).render('login', {
+        error: message,
+        email,
+        clientId,
+        redirectUri,
+        responseType,
+        scope,
+        state,
+        codeChallenge,
+        codeChallengeMethod,
+        csrfToken,
+      });
+    };
+
     if (await this.attempts.isLocked(tenantId, email, ip || '')) {
       await this.audit.logEvent({
         tenantId,
         type: 'login.locked',
         metadata: { email, ip, clientId, ua },
       });
-      return res.status(429).render('login', { error: 'Too many attempts. Try again later.' });
+      return renderWithError(429, 'Too many attempts. Try again later.');
     }
     const user = await this.users.findOne({ where: { tenantId, email } });
     if (!user) {
@@ -102,7 +133,7 @@ export class LoginController {
         type: 'login.failure',
         metadata: { reason: 'user_not_found', email, ip, clientId, ua },
       });
-      return res.status(401).render('login', { error: 'Invalid credentials' });
+      return renderWithError(401, 'Invalid credentials');
     }
     const ok = await this.passwords.verifyPassword(user.passwordHash, password);
     if (!ok) {
@@ -113,10 +144,14 @@ export class LoginController {
         type: 'login.failure',
         metadata: { reason: 'bad_password', email, ip, clientId, ua },
       });
-      return res.status(401).render('login', { error: 'Invalid credentials' });
+      return renderWithError(401, 'Invalid credentials');
     }
     await this.attempts.resetOnSuccess(tenantId, email, ip || '');
     const token = await this.op.issue(tenantId, user.id);
+    this.logger.info(
+      { tenantId, userId: user.id, clientId, ip },
+      'Login successful; issuing OP session',
+    );
     await this.audit.logEvent({
       tenantId,
       actorId: user.id,

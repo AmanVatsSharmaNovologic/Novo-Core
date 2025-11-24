@@ -46,6 +46,12 @@ Client-credentials tokens (machine-to-machine) contain:
 Permissions in the JWT are **cached** for the lifetime of the access token
 (≈5 minutes). The Auth service’s RBAC database remains the source of truth.
 
+> Users may be onboarded via public registration (`/public/register`),
+> admin-created accounts, or invitations. From a resource server perspective,
+> **only the JWT claims (`sub`, `org_id`, `roles`, `permissions`, `scope`, etc.)
+> matter** – token validation and authorization logic stay the same regardless
+> of how a user entered the system.
+
 ---
 
 ## 3. Verifying tokens in a NestJS microservice

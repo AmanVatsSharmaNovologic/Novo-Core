@@ -33,6 +33,9 @@
   - `POST https://api.novologic.co/management/orgs/{tenantId}/invitations`
   - `POST https://api.novologic.co/management/invitations/accept`
 
+- **Public registration (v1)**
+  - `POST https://api.novologic.co/public/register`
+
 **Scopes**: `openid`, `profile`, `email`, `offline_access`  
 **Tokens**: Access token is JWT RS256, `aud=novologic-api`, with claims `org_id`, `sid`, `roles`, and a cached `permissions[]` array derived from RBAC.
 
@@ -105,6 +108,122 @@ export default function LoginPage() {
   );
 }
 ```
+
+---
+
+## Registration (v1)
+
+For the initial version, registration is a **simple public JSON endpoint** that creates a
+global identity and a platform-tenant user for the main dashboard SPA.
+
+- **Endpoint**: `POST https://api.novologic.co/public/register`
+- **Auth**: Public (no cookies, no `x-tenant-id` required)
+- **Body (JSON)**:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "Password123"
+}
+```
+
+- **Validation**:
+  - `email` must be a valid email.
+  - `password` must be at least 8 characters (backend may tighten policy later).
+
+- **Responses**:
+  - `201 Created`:
+    - Body: `{ "identityId": "<uuid>", "email": "user@example.com" }`
+  - `409 Conflict`:
+    - Body (shape): `{ "code": "IDENTITY_EXISTS", "message": "Identity already exists", ... }`
+    - Means this email is already registered (via this flow or admin/invitations).
+
+### Example: Next.js sign-up + redirect into login
+
+```ts
+// utils/auth/registerAndLogin.ts
+export async function registerAndLogin(email: string, password: string) {
+  const base = process.env.NEXT_PUBLIC_AUTH_BASE_URL!;
+
+  const res = await fetch(`${base}/public/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (res.status === 409) {
+    // Email already registered – surface a friendly message and let user sign in
+    return { ok: false, reason: 'exists' as const };
+  }
+
+  if (!res.ok) {
+    // TODO[SonuRamTODO]: surface server error to user
+    return { ok: false, reason: 'error' as const };
+  }
+
+  // Registration succeeded – identity is auto-verified/active in this v1.
+  // Immediately enter the normal PKCE login flow.
+  const { startLogin } = await import('./startLogin');
+  void startLogin();
+
+  return { ok: true as const, reason: 'created' as const };
+}
+```
+
+Usage in a basic sign-up form:
+
+```tsx
+// app/signup/page.tsx
+'use client';
+import * as React from 'react';
+import { registerAndLogin } from '@/utils/auth/registerAndLogin';
+
+export default function SignUpPage() {
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const result = await registerAndLogin(email, password);
+    if (!result.ok) {
+      if (result.reason === 'exists') {
+        setError('An account with this email already exists. Please sign in.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+      />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+        required
+      />
+      <button type="submit">Create account</button>
+      {error && <p>{error}</p>}
+    </form>
+  );
+}
+```
+
+> Note: A future version will introduce **real email verification** (magic link /
+> OTP). For now, the backend auto-verifies the email and marks the identity as
+> active immediately after successful registration.
 
 ### 2) Handle `/auth/callback` in Next.js
 

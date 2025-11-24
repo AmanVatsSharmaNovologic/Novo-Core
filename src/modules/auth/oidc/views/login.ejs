@@ -29,7 +29,13 @@
       <form method="POST" action="/login">
         <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
         <div class="row">
-          <input type="email" name="email" placeholder="Email" required />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value="<%= typeof email !== 'undefined' ? email : '' %>"
+            required
+          />
         </div>
         <div class="row">
           <input type="password" name="password" placeholder="Password" required />
