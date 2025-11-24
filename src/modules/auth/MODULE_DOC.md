@@ -187,6 +187,7 @@ In a future **centralized AuthZ** service, we can:
 - Expose the same RBAC logic over HTTP/gRPC for live authorization decisions (e.g. `POST /authz/check`), with microservices calling it when they need stronger consistency than the cached `permissions[]` in the token.
 
 ## Changelog
+- 2025‑11‑24: Wired `/revoke` controller to inject the `RefreshToken` repository via `OidcModule` (fixing DI errors); verified RBAC cache wiring and dotenv-based config with green Jest suite (no API changes).
 - 2025‑11‑22: Added permissions to access tokens; updated docs with claim shape, resource-server link, and AuthZ roadmap.
 - 2025‑11‑16: Added refresh cookie fallback; in‑memory caches (permissions, JWKS verify); TenantStatusGuard on OIDC/Management; GraphQL Auth guard (optional); E2E tests via Testcontainers.
 - 2025‑11‑15: Added client_credentials grant; refresh token revocation; GlobalAuthGuard + AuthClaimsGuard; permission service (DB); tenant guard; CSRF on login/consent; failed-login tracking; RBAC management endpoints.
