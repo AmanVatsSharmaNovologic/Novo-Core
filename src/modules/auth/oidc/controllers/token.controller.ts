@@ -3,7 +3,9 @@
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Token endpoint (code exchange + refresh + client_credentials)
 * Author: Cursor / BharatERP
-* Last-updated: 2025-11-19
+* Last-updated: 2025-11-24
+* Notes:
+* - For authorization_code grant, supports global realm clients (e.g., app-spa) without requiring tenantId from the frontend.
 */
 
 import { Body, Controller, HttpException, HttpStatus, Post, Res, UsePipes, ValidationPipe } from '@nestjs/common';
@@ -214,15 +216,20 @@ export class TokenController {
     }
 
     if (grant === 'authorization_code') {
-      const tenantId = RequestContext.get()?.tenantId;
-      if (!tenantId) throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
       if (!body.client_id || !body.code || !body.redirect_uri || !body.code_verifier) {
         throw new HttpException({ code: 'invalid_request', message: 'Missing parameters' }, HttpStatus.BAD_REQUEST);
       }
-      const client = await this.clients.findByClientId(tenantId, body.client_id);
+      const ctxTenantId = RequestContext.get()?.tenantId;
+      const { client, tenantId } = await this.clients.resolveClient(ctxTenantId, body.client_id);
+      if (!tenantId) {
+        throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
+      }
       if (!client) throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
       if (!client.grantTypes?.includes('authorization_code')) {
         throw new HttpException({ code: 'unauthorized_client' }, HttpStatus.BAD_REQUEST);
+      }
+      if (tenantId !== ctxTenantId) {
+        RequestContext.set({ tenantId });
       }
       // Authenticate confidential clients
       if (client.clientSecretHash) {

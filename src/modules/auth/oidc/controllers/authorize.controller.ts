@@ -3,9 +3,10 @@
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Authorization endpoint (code+PKCE)
 * Author: Cursor / BharatERP
-* Last-updated: 2025-11-08
+* Last-updated: 2025-11-24
 * Notes:
 * - Redirects to /login if not authenticated; then to /consent
+* - Supports global realm clients (e.g. app-spa) without requiring tenantId from the frontend
 */
 
 import { Controller, Get, HttpException, HttpStatus, Query, Res } from '@nestjs/common';
@@ -35,9 +36,18 @@ export class AuthorizeController {
     if (!codeChallenge) {
       throw new HttpException({ code: 'invalid_request', message: 'Missing code_challenge' }, HttpStatus.BAD_REQUEST);
     }
-    const tenantId = RequestContext.get()?.tenantId;
-    if (!tenantId) throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
-    const client = await this.clients.findByClientId(tenantId, clientId);
+    const ctxTenantId = RequestContext.get()?.tenantId;
+    const { client, tenantId } = await this.clients.resolveClient(ctxTenantId, clientId);
+    if (!tenantId) {
+      throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
+    }
+    if (!client) {
+      throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
+    }
+    // Ensure RequestContext reflects the effective tenant (important for logging/audit)
+    if (tenantId !== ctxTenantId) {
+      RequestContext.set({ tenantId });
+    }
     if (!client || !this.clients.isRedirectAllowed(client, redirectUri)) {
       throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
     }

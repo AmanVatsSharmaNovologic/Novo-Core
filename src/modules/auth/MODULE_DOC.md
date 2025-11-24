@@ -125,6 +125,26 @@ High‑level:
 - Key(kid, alg, publicJwk, privateRef, notBefore, notAfter, status)
 - AuditEvent(id, tenantId, actorId?, type, resource, metadata, createdAt)
 
+### Identity vs Tenant vs Membership vs Client
+
+- **Identity**  
+  - Global person record (email, password/MFA, profile).  
+  - Exists once per email for the entire NovoLogic realm.  
+  - Independent of any single organisation.
+- **Tenant (Organisation)**  
+  - Logical organisation/account within NovoLogic (what the dashboard calls an \"organisation\").  
+  - Owns users, roles, permissions, clients, sessions, audit events, etc.
+- **Membership**  
+  - Links an `Identity` to a `Tenant` with a status and optional legacy `userId`.  
+  - One identity can have memberships in many tenants (multi-org users, like Salesforce/Zoho).  
+  - RBAC (`Role`/`Permission`) is evaluated within a tenant for a given membership.
+- **User (legacy/tenant-scoped profile)**  
+  - Per-tenant user record for auth profile data (email, password, status).  
+  - `Membership.userId` provides a bridge from the global identity to existing per-tenant users.
+- **Client (OAuth/OIDC application)**  
+  - Represents an application that uses this auth server (e.g. `app-spa`, backoffice, integrations).  
+  - Today each client row belongs to a tenant, but some clients (e.g. the main dashboard SPA) act as **global realm clients** that do not require the frontend to send a tenant during login; internally they still persist sessions/audit under a platform tenant.
+
 ## Request flow (high level)
 
 ```mermaid

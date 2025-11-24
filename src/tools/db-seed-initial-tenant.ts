@@ -77,6 +77,7 @@ async function main(): Promise<void> {
         tenantId: tenant.id,
         clientId,
         firstParty: true,
+        isGlobalRealm: true,
         redirectUris: [redirectUri],
         postLogoutRedirectUris: [redirectUri],
         grantTypes: ['authorization_code', 'refresh_token'],
@@ -85,7 +86,13 @@ async function main(): Promise<void> {
       client = await clientRepo.save(client);
       logger.info({ clientId: client.clientId, id: client.id }, 'Created SPA client');
     } else {
-      logger.info({ clientId: client.clientId, id: client.id }, 'SPA client already exists');
+      if (!client.isGlobalRealm) {
+        client.isGlobalRealm = true;
+        client = await clientRepo.save(client);
+        logger.info({ clientId: client.clientId, id: client.id }, 'Marked SPA client as global realm');
+      } else {
+        logger.info({ clientId: client.clientId, id: client.id }, 'SPA client already exists as global realm');
+      }
     }
 
     logger.info(

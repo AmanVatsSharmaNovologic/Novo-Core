@@ -3,7 +3,9 @@
 * Module: modules/auth/oidc
 * Purpose: Consent UI for code flow
 * Author: Cursor / BharatERP
-* Last-updated: 2025-11-08
+* Last-updated: 2025-11-24
+* Notes:
+* - Uses ClientService.resolveClient so global realm clients work without explicit tenantId from the frontend
 */
 
 import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
@@ -39,9 +41,17 @@ export class ConsentController {
     @Query('code_challenge_method') codeChallengeMethod: 'S256' | 'plain' = 'S256',
     @Res() res: Response,
   ) {
-    const tenantId = RequestContext.get()?.tenantId;
-    if (!tenantId) throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
-    const client = await this.clients.findByClientId(tenantId, clientId);
+    const ctxTenantId = RequestContext.get()?.tenantId;
+    const { client, tenantId } = await this.clients.resolveClient(ctxTenantId, clientId);
+    if (!tenantId) {
+      throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
+    }
+    if (!client) {
+      throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
+    }
+    if (tenantId !== ctxTenantId) {
+      RequestContext.set({ tenantId });
+    }
     if (!client || !this.clients.isRedirectAllowed(client, redirectUri)) {
       throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
     }
@@ -90,9 +100,17 @@ export class ConsentController {
     @Body('code_challenge_method') codeChallengeMethod: 'S256' | 'plain' = 'S256',
     @Res() res: Response,
   ) {
-    const tenantId = RequestContext.get()?.tenantId;
-    if (!tenantId) throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
-    const client = await this.clients.findByClientId(tenantId, clientId);
+    const ctxTenantId = RequestContext.get()?.tenantId;
+    const { client, tenantId } = await this.clients.resolveClient(ctxTenantId, clientId);
+    if (!tenantId) {
+      throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
+    }
+    if (!client) {
+      throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
+    }
+    if (tenantId !== ctxTenantId) {
+      RequestContext.set({ tenantId });
+    }
     if (!client || !this.clients.isRedirectAllowed(client, redirectUri)) {
       throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
     }
