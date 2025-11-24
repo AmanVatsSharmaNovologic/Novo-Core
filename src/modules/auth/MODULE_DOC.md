@@ -150,9 +150,10 @@ sequenceDiagram
 ```
 
 Tenant resolution:
-- `x-tenant-id` header (from gateway) → used if present
-- else subdomain `https://{tenant}.novologic.co` → used
-- if host is `auth.novologic.co` and no header present, `tenant` cannot be inferred → frontends should add `x-tenant-id` on API/Token calls or use tenant subdomains. (Future: optional `tenant_id` query param to `/authorize` and `/token` can be added if needed.)
+- `x-tenant-id` header (from gateway or frontend) → used if present
+- else `x-tenant-id` / `tenant_id` query param (e.g. `/authorize?...&x-tenant-id=<tenant-uuid>`) → used
+- else subdomain `https://{tenant}.novologic.co` → used (excluding infra hosts like `auth.novologic.co` and `api.novologic.co`)
+- if host is `auth.novologic.co` or `api.novologic.co` and no header/query present, `tenant` cannot be inferred → frontends must provide `x-tenant-id` (header or query) on `/authorize`, `/token`, and API calls.
 
 Security
 - Passwords: Argon2; ID token/Access token: RS256 with rotating keys (JWKS)
@@ -187,7 +188,7 @@ In a future **centralized AuthZ** service, we can:
 - Expose the same RBAC logic over HTTP/gRPC for live authorization decisions (e.g. `POST /authz/check`), with microservices calling it when they need stronger consistency than the cached `permissions[]` in the token.
 
 ## Changelog
-- 2025‑11‑24: Wired `/revoke` controller to inject the `RefreshToken` repository via `OidcModule` (fixing DI errors); verified RBAC cache wiring and dotenv-based config with green Jest suite (no API changes).
+- 2025‑11‑24: Added query-based tenant resolution for `/authorize` and `/token` (supports `x-tenant-id` / `tenant_id` query params; infra hosts `auth.novologic.co` and `api.novologic.co` no longer treated as tenant slugs); wired initial tenant/client seed tool and updated frontend guidance for sandbox2 → app migration.
 - 2025‑11‑22: Added permissions to access tokens; updated docs with claim shape, resource-server link, and AuthZ roadmap.
 - 2025‑11‑16: Added refresh cookie fallback; in‑memory caches (permissions, JWKS verify); TenantStatusGuard on OIDC/Management; GraphQL Auth guard (optional); E2E tests via Testcontainers.
 - 2025‑11‑15: Added client_credentials grant; refresh token revocation; GlobalAuthGuard + AuthClaimsGuard; permission service (DB); tenant guard; CSRF on login/consent; failed-login tracking; RBAC management endpoints.

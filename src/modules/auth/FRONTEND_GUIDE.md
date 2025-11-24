@@ -43,8 +43,10 @@ Add (at least) these env vars:
 
 - **Frontend (public)**
   - `NEXT_PUBLIC_AUTH_BASE_URL=https://api.novologic.co`
-  - `NEXT_PUBLIC_API_BASE_URL=https://api.novologic.co`
-  - `NEXT_PUBLIC_TENANT_ID=<tenant-uuid>`
+- `NEXT_PUBLIC_API_BASE_URL=https://api.novologic.co`
+- `NEXT_PUBLIC_TENANT_ID=<tenant-uuid>`        # value = Tenant.id from DB (UUID)
+- `NEXT_PUBLIC_AUTH_CLIENT_ID=app-spa`
+- `NEXT_PUBLIC_AUTH_REDIRECT_URI=https://sandbox2.novologic.co/auth/callback`
 - **Backend-only (optional service calls)**
   - `AUTH_CLIENT_ID=app-spa`
   - `AUTH_CLIENT_REDIRECT_URI=https://sandbox2.novologic.co/auth/callback`
@@ -75,8 +77,8 @@ export async function startLogin() {
 
   const url = new URL('/authorize', authBase);
   url.search = new URLSearchParams({
-    client_id: 'app-spa',
-    redirect_uri: 'https://sandbox2.novologic.co/auth/callback',
+    client_id: process.env.NEXT_PUBLIC_AUTH_CLIENT_ID!,
+    redirect_uri: process.env.NEXT_PUBLIC_AUTH_REDIRECT_URI!,
     response_type: 'code',
     scope: 'openid profile email offline_access',
     state: crypto.randomUUID(),

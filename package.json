@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:health": "node -r ts-node/register -r tsconfig-paths/register src/tools/db-health.ts",
     "db:health:watch": "npm run -s db:health -- --watch",
-    "db:migrate": "node -r ts-node/register -r tsconfig-paths/register src/tools/db-migrate.ts"
+    "db:migrate": "node -r ts-node/register -r tsconfig-paths/register src/tools/db-migrate.ts",
+    "db:seed:initial-tenant": "node -r ts-node/register -r tsconfig-paths/register src/tools/db-seed-initial-tenant.ts"
   },
   "dependencies": {
     "@graphql-yoga/nestjs": "^3.8.0",
