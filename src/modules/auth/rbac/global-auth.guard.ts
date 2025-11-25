@@ -39,7 +39,8 @@ export class GlobalAuthGuard implements CanActivate {
       path.startsWith('/consent') ||
       path.startsWith('/token') ||
       path.startsWith('/introspect') ||
-      path.startsWith('/revoke')
+      path.startsWith('/revoke') ||
+      path.startsWith('/public/register')
     );
   }
 }

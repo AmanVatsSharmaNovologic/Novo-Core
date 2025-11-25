@@ -123,7 +123,7 @@ describe('Auth Flows (e2e)', () => {
     await app.close();
   });
 
-  it('OIDC authorization code flow with CSRF and cookies', async () => {
+  it('OIDC authorization code flow with CSRF and cookies (app-spa, no explicit tenant header on /authorize)', async () => {
     const authorize = await agent
       .get(
         '/authorize?client_id=app-spa&redirect_uri=' +
@@ -135,7 +135,6 @@ describe('Auth Flows (e2e)', () => {
           '&code_challenge=plain-chal' +
           '&code_challenge_method=plain',
       )
-      .set('x-tenant-id', tenantId)
       .expect(302);
     // Redirect to /login and set CSRF cookie
     const cookies1 = authorize.headers['set-cookie'] as string[] | undefined;
