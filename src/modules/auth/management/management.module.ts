@@ -30,14 +30,23 @@ import { APP_GUARD } from '@nestjs/core';
 import { OrgResolverGql } from './org.resolver';
 import { RbacResolverGql } from './rbac.resolver';
 import { AuditModule } from '../audit/audit.module';
+import { SessionsModule } from '../sessions/sessions.module';
+import { SessionResolverGql } from './session.resolver';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Tenant, User, Invitation, Role, UserRole, Permission, RolePermission]), PasswordsModule, RbacModule, AuditModule],
+  imports: [
+    TypeOrmModule.forFeature([Tenant, User, Invitation, Role, UserRole, Permission, RolePermission]),
+    PasswordsModule,
+    RbacModule,
+    AuditModule,
+    SessionsModule,
+  ],
   providers: [
     TenantResolver,
     UserResolverGql,
     OrgResolverGql,
     RbacResolverGql,
+    SessionResolverGql,
     {
       provide: APP_GUARD,
       useClass: TenantStatusGuard,

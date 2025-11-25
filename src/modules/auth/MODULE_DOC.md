@@ -8,9 +8,12 @@ updated: 2025-11-22 (IST)
 - OIDC Provider at `https://api.novologic.co` (REST) for user registration/login/session:
   - `/.well-known/openid-configuration`, `/jwks.json`
   - `/authorize` (code + PKCE), `/token` (code→token, refresh, client_credentials), `/userinfo`, `/introspect`, `/revoke`
-  - `/public/register` (public registration), `/login` (HTML form), `/consent` (HTML confirm scopes)
+  - `/public/register` (public registration), `/login` (HTML form), `/consent` (scope consent screen)
 - GraphQL Admin API at `/graphql` (for internal consoles / back‑office):
-  - `tenants()` list, `users(tenantId)`, `registerUser(input)` (more admin CRUD to be added)
+  - `tenants()`, `users(tenantId)`, `registerUser(input)`
+  - Organisation & team management: `meOrgs`, `orgMembers(tenantId)`, `inviteMember(input)`, `updateMemberRoles(input)`
+  - RBAC management: `roles(tenantId)`, `permissions(tenantId)`, `createRole(input)`, `updateRolePermissions(input)`
+  - Session management: `meSessions`, `userSessions(input)`, `revokeSession(input)`
 - Sessions & refresh rotation, MFA (TOTP), RBAC scaffolding, audit logs
 
 ## Folder Documentation
@@ -209,7 +212,8 @@ In a future **centralized AuthZ** service, we can:
 - Expose the same RBAC logic over HTTP/gRPC for live authorization decisions (e.g. `POST /authz/check`), with microservices calling it when they need stronger consistency than the cached `permissions[]` in the token.
 
 ## Changelog
-- 2025‑11‑24: Added `/public/register` for global identity + platform-tenant user creation (v1, auto-verified); improved login UX to preserve OIDC/PKCE params and surface errors; documented registration flow in `FRONTEND_GUIDE.md` and clarified resource-server invariants.
+- 2025‑11‑25: Added GraphQL session management resolvers (`meSessions`, `userSessions`, `revokeSession`) and documented session management flows for self-service and admin UIs.
+- 2025‑11‑24: Added `/public/register` for global identity + platform-tenant user creation (v1, auto-verified); improved login UX to preserve OIDC/PKCE params and surface errors; documented registration flow in `FRONTEND_GUIDE.md` and clarified resource-server norms.
 - 2025‑11‑24: Added query-based tenant resolution for `/authorize` and `/token` (supports `x-tenant-id` / `tenant_id` query params; infra hosts `auth.novologic.co` and `api.novologic.co` no longer treated as tenant slugs); wired initial tenant/client seed tool and updated frontend guidance for sandbox2 → app migration.
 - 2025‑11‑22: Added permissions to access tokens; updated docs with claim shape, resource-server link, and AuthZ roadmap.
 - 2025‑11‑16: Added refresh cookie fallback; in‑memory caches (permissions, JWKS verify); TenantStatusGuard on OIDC/Management; GraphQL Auth guard (optional); E2E tests via Testcontainers.

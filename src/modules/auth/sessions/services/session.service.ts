@@ -103,6 +103,26 @@ export class SessionService {
       .execute();
   }
 
+  /**
+   * List sessions for a given user within a tenant. Used by GraphQL resolvers
+   * to power \"My sessions\" and admin security views.
+   */
+  async listSessionsForUser(tenantId: string, userId: string): Promise<Session[]> {
+    return this.sessionRepo.find({
+      where: { tenantId, userId },
+      order: { lastSeenAt: 'DESC', createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * Look up a session by id within a tenant. Returns null if the session does
+   * not exist or belongs to a different tenant.
+   */
+  async findSessionInTenant(tenantId: string, sessionId: string): Promise<Session | null> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId, tenantId } });
+    return session ?? null;
+  }
+
   private generateRawToken(): string {
     return randomUUID() + '.' + randomUUID();
   }

@@ -129,4 +129,32 @@ export class InvitationResultGql {
   expiresAt!: string;
 }
 
+/**
+ * GraphQL view of a user session for session management UIs.
+ */
+@ObjectType()
+export class SessionGql {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  tenantId!: string;
+
+  @Field()
+  userId!: string;
+
+  @Field(() => String, { nullable: true })
+  device?: string;
+
+  @Field(() => String, { nullable: true })
+  ip?: string;
+
+  @Field(() => String, { nullable: true })
+  lastSeenAt?: string;
+
+  @Field(() => String)
+  createdAt!: string;
+}
+
+
 

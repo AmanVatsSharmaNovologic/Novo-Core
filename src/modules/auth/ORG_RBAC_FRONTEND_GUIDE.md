@@ -1,4 +1,4 @@
-## Org & RBAC GraphQL Guide (for Next.js / SPA)
+## Org, RBAC & Session Management GraphQL Guide (for Next.js / SPA)
 
 This guide describes how front‑end teams (Next.js, SPA) should use the **GraphQL
 management API** at `/graphql` for:
@@ -7,6 +7,7 @@ management API** at `/graphql` for:
 - Listing organisations for the current user (limited to active tenant for now).
 - Managing team members (list, invite).
 - Managing roles and permissions.
+- Managing user sessions (\"My sessions\" and org-wide security views).
 
 > Login / registration and token flows are covered in `FRONTEND_GUIDE.md`. This
 > document focuses only on **orgs + RBAC admin** using GraphQL.
@@ -294,7 +295,115 @@ with an error code `PERMISSIONS_NOT_FOUND`.
 
 ---
 
-## 5. Suggested frontend patterns (AI‑friendly)
+## 5. Session management (sessions & \"logged in devices\")
+
+### 5.1 Query: `meSessions` (current user)
+
+Use this query to show the current user a list of their active sessions
+within the **active tenant** (as determined by `x-tenant-id`). Each session
+represents a logical login for a device/browser and includes basic metadata.
+
+```graphql
+query MeSessions {
+  meSessions {
+    id
+    tenantId
+    userId
+    device
+    ip
+    lastSeenAt
+    createdAt
+  }
+}
+```
+
+Typical usage:
+
+- Render a \"My devices\" / \"Active sessions\" table in the account settings
+  area of your app.
+- Use `lastSeenAt` and `device` / `ip` to show the user where and when each
+  session was last active.
+
+### 5.2 Mutation: `revokeSession` (self-service logout from other devices)
+
+To allow a user to sign out a specific session (e.g. \"Log out of this
+device\"), call the `revokeSession` mutation with the session id and the
+current tenant id. The backend will revoke all refresh tokens for that
+session; any further API calls from that device will fail with `INVALID_TOKEN`
+and should trigger a local sign-out.
+
+```graphql
+mutation RevokeMySession($tenantId: ID!, $sessionId: ID!) {
+  revokeSession(
+    input: { tenantId: $tenantId, sessionId: $sessionId }
+  )
+}
+```
+
+Notes:
+
+- The current user can only revoke their own sessions. Attempting to revoke a
+  session that belongs to another user will return a `FORBIDDEN` error.
+- The active browser session will also be revoked if its `sessionId` is
+  passed; the frontend should handle the resulting 401/403 by clearing local
+  state and redirecting to `/login`.
+
+### 5.3 Admin session management: `userSessions` and `revokeSession`
+
+Org owners/admins can list and revoke sessions for any member in their
+tenant. This is useful for security operations (e.g. \"Log out all sessions
+for this user\" or \"Terminate suspicious session from IP X\").
+
+```graphql
+query UserSessions($input: ListUserSessionsInput!) {
+  userSessions(input: $input) {
+    id
+    tenantId
+    userId
+    device
+    ip
+    lastSeenAt
+    createdAt
+  }
+}
+```
+
+Where `ListUserSessionsInput` is:
+
+```graphql
+input ListUserSessionsInput {
+  tenantId: ID!
+  userId: ID!
+}
+```
+
+To revoke a specific session as an admin:
+
+```graphql
+mutation RevokeSession($input: RevokeSessionInput!) {
+  revokeSession(input: $input)
+}
+```
+
+Where `RevokeSessionInput` is:
+
+```graphql
+input RevokeSessionInput {
+  tenantId: ID!
+  sessionId: ID!
+}
+```
+
+Notes:
+
+- The caller must have `owner` or `admin` role in the target tenant; otherwise
+  the resolver returns `FORBIDDEN`.
+- The `tenantId` in the input must match the `x-tenant-id` header (tenant
+  scope is enforced server-side). This prevents cross-tenant access.
+
+---
+
+## 6. Suggested frontend patterns (AI‑friendly)
 
 - **GraphQL client**:
   - Single Apollo client (or similar) configured with:
@@ -314,7 +423,8 @@ with an error code `PERMISSIONS_NOT_FOUND`.
     not as the primary enforcement layer in the browser.
 
 > For most SPA teams, you can treat this guide as the contract for all
-> organisation & RBAC admin UIs. Login, registration, tokens, and normal API
-> calls remain as defined in `FRONTEND_GUIDE.md`.
+> organisation, RBAC, and session management UIs. Login, registration,
+> tokens, and normal API calls remain as defined in `FRONTEND_GUIDE.md`.
+
 
 
