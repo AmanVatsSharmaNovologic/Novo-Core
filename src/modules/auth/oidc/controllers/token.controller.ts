@@ -254,7 +254,16 @@ export class TokenController {
         const ok = await this.passwords.verifyPassword(client.clientSecretHash, providedSecret);
         if (!ok) throw new HttpException({ code: 'invalid_client' }, HttpStatus.BAD_REQUEST);
       }
-      const consumed = await this.codes.consume(tenantId, client.id, body.code, body.redirect_uri, body.code_verifier);
+      let consumed;
+      try {
+        consumed = await this.codes.consume(tenantId, client.id, body.code, body.redirect_uri, body.code_verifier);
+      } catch (err) {
+        // Normalize invalid_grant errors from AuthorizationCodeService into a proper OAuth2 error response
+        if (err instanceof Error && err.message === 'invalid_grant') {
+          throw new HttpException({ code: 'invalid_grant', message: 'invalid_grant' }, HttpStatus.BAD_REQUEST);
+        }
+        throw err;
+      }
       const { session, refreshToken } = await this.sessions.issueSession({
         tenantId,
         userId: consumed.userId,

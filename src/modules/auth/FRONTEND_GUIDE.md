@@ -72,9 +72,12 @@ export async function startLogin() {
       .replace(/\//g, '_')
       .replace(/=+$/g, '');
 
+  // PKCE (S256): challenge = BASE64URL(SHA256(code_verifier))
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   const verifier = enc(bytes);
-  const challenge = enc(await crypto.subtle.digest('SHA-256', bytes));
+  const challenge = enc(
+    await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)),
+  );
 
   sessionStorage.setItem('pkce_verifier', verifier);
 
