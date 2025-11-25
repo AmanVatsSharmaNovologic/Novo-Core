@@ -286,6 +286,17 @@ export default function AuthCallback() {
 }
 ```
 
+**Important integration notes (pass these to frontend devs):**
+
+- Ensure the redirect URI configured for `client_id=app-spa` in the auth database is **exactly** the same as
+  `NEXT_PUBLIC_AUTH_REDIRECT_URI` (including path and protocol). Mismatches will cause the callback to load
+  **without** a `code` parameter.
+- The `/auth/callback` route **must not** immediately redirect to another page before running `handle()`. If
+  your router/layout performs automatic redirects, ensure the code exchange runs **first**.
+- Do **not** call `/token` with `grant_type=refresh_token` until **after** this authorization_code exchange has
+  succeeded at least once and the backend has set the `rt` cookie. If you see `\"Missing refresh_token\"` from
+  `/token`, it means the initial login/callback step has not completed.
+
 ---
 
 ## Calling APIs from Next.js

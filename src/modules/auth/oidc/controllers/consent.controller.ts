@@ -20,6 +20,7 @@ import { CsrfGuard } from '../../../common/guards/csrf.guard';
 import { randomUUID } from 'crypto';
 import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.types';
 import { Inject } from '@nestjs/common';
+import { LoggerService } from '../../../../shared/logger';
 
 @Controller('/consent')
 export class ConsentController {
@@ -28,6 +29,7 @@ export class ConsentController {
     private readonly clients: ClientService,
     private readonly codes: AuthorizationCodeService,
     private readonly audit: AuditService,
+    private readonly logger: LoggerService,
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
   ) {}
 
@@ -43,7 +45,8 @@ export class ConsentController {
     @Query('code_challenge_method') codeChallengeMethod: 'S256' | 'plain' = 'S256',
     @Res() res: Response,
   ) {
-    const ctxTenantId = RequestContext.get()?.tenantId;
+    const ctx = RequestContext.get();
+    const ctxTenantId = ctx?.tenantId;
     const { client, tenantId } = await this.clients.resolveClient(ctxTenantId, clientId);
     if (!tenantId) {
       throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
@@ -77,6 +80,17 @@ export class ConsentController {
       });
       res.setHeader('Cache-Control', 'no-store, max-age=0');
       res.setHeader('Pragma', 'no-cache');
+      this.logger.debug(
+        {
+          tenantId,
+          userId: sess.userId,
+          clientId: client.clientId,
+          redirectUri,
+          scope,
+          state,
+        },
+        'Rendering consent view',
+      );
       return res.render('consent', {
         clientId,
         redirectUri,
@@ -106,7 +120,8 @@ export class ConsentController {
     @Body('code_challenge_method') codeChallengeMethod: 'S256' | 'plain' = 'S256',
     @Res() res: Response,
   ) {
-    const ctxTenantId = RequestContext.get()?.tenantId;
+    const ctx = RequestContext.get();
+    const ctxTenantId = ctx?.tenantId;
     const { client, tenantId } = await this.clients.resolveClient(ctxTenantId, clientId);
     if (!tenantId) {
       throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
@@ -123,6 +138,17 @@ export class ConsentController {
     if (!client.grantTypes?.includes('authorization_code')) {
       throw new HttpException({ code: 'unauthorized_client', message: 'Grant not allowed' }, HttpStatus.BAD_REQUEST);
     }
+    this.logger.info(
+      {
+        tenantId,
+        clientId: client.clientId,
+        decision,
+        redirectUri,
+        scope,
+        state,
+      },
+      'Handling consent submission',
+    );
     if (decision !== 'approve') {
       const url = new URL(redirectUri);
       url.searchParams.set('error', 'access_denied');
@@ -134,6 +160,16 @@ export class ConsentController {
         resource: client.id,
         metadata: { clientId: client.clientId, scope },
       });
+      this.logger.info(
+        {
+          tenantId,
+          clientId: client.clientId,
+          decision,
+          redirectUri,
+          state,
+        },
+        'Consent denied; redirecting with access_denied',
+      );
       return res.redirect(url.toString());
     }
     const sessionCookie = (res.req as any).cookies?.op_session as string | undefined;
@@ -162,6 +198,16 @@ export class ConsentController {
       resource: client.id,
       metadata: { clientId: client.clientId, scope: approvedScopes },
     });
+    this.logger.info(
+      {
+        tenantId,
+        userId: sess.userId,
+        clientId: client.clientId,
+        redirectUri,
+        scope: approvedScopes,
+      },
+      'Consent approved; issued authorization code',
+    );
     return res.redirect(url.toString());
   }
 }
