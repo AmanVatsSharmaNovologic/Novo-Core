@@ -13,7 +13,23 @@ export class CsrfGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     if (context.getType() !== 'http') return true;
     const req = context.switchToHttp().getRequest();
-    const cookieToken: string | undefined = (req.cookies?.csrf as string | undefined) ?? undefined;
+    // Prefer parsed cookies (when cookie-parser is present), but fall back to
+    // manual parsing of the Cookie header so we do not depend on middleware
+    // ordering in production.
+    let cookieToken: string | undefined = (req.cookies?.csrf as string | undefined) ?? undefined;
+    if (!cookieToken) {
+      const raw: string | undefined = req.headers['cookie'] as string | undefined;
+      if (raw) {
+        const parts = raw.split(';');
+        for (const part of parts) {
+          const [k, ...rest] = part.split('=');
+          if (k && k.trim() === 'csrf') {
+            cookieToken = rest.join('=').trim();
+            break;
+          }
+        }
+      }
+    }
     const headerToken: string | undefined = (req.headers['x-csrf-token'] as string | undefined) ?? undefined;
     const bodyToken: string | undefined = (req.body?.csrf_token as string | undefined) ?? undefined;
     if (!cookieToken) return false;
