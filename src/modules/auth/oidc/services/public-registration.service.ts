@@ -7,7 +7,7 @@
  */
 
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryFailedError } from 'typeorm';
 import { Identity } from '../../entities/identity.entity';
 import { User } from '../../entities/user.entity';
 import { Membership } from '../../entities/membership.entity';
@@ -122,7 +122,19 @@ export class PublicRegistrationService {
       return { identityId: savedIdentity.id, email: savedIdentity.email };
     } catch (err) {
       await runner.rollbackTransaction();
-      this.logger.error({ err, email: email.trim().toLowerCase() }, 'Public registration failed');
+      // Handle race conditions where two requests try to create the same identity
+      // concurrently: surface a clean IDENTITY_EXISTS conflict instead of a 500.
+      if (err instanceof QueryFailedError && (err as any).code === '23505') {
+        this.logger.warn(
+          { email: normalizedEmail },
+          'Identity unique constraint hit during public registration; treating as existing identity',
+        );
+        throw new HttpException(
+          { code: 'IDENTITY_EXISTS', message: 'Identity already exists' },
+          HttpStatus.CONFLICT,
+        );
+      }
+      this.logger.error({ err, email: normalizedEmail }, 'Public registration failed');
       throw err;
     } finally {
       await runner.release();

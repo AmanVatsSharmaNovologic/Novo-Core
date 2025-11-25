@@ -1,5 +1,5 @@
 /**
- * @file public-register.e2e.spec.ts
+ * @file public-register.e2e-spec.ts
  * @module tests/e2e
  * @description HTTP-level tests for POST /public/register (happy path + conflict).
  *              Uses the real Nest app with TypeORM but isolates behavior with unique emails.
@@ -71,6 +71,6 @@ describe('Public registration (e2e)', () => {
     expect(conflict.body).toHaveProperty('code', 'IDENTITY_EXISTS');
     expect(typeof conflict.body.message === 'string').toBe(true);
   });
-}
+});
 
 
