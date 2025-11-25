@@ -156,5 +156,45 @@ export class SessionGql {
   createdAt!: string;
 }
 
+/**
+ * Per-user settings/preferences exposed to front-end via GraphQL.
+ * Backed by the User.profile JSON column.
+ */
+@ObjectType()
+export class UserSettingsGql {
+  @Field(() => String, { nullable: true })
+  timezone?: string;
+
+  @Field(() => String, { nullable: true })
+  locale?: string;
+
+  @Field(() => String, { nullable: true })
+  theme?: string;
+
+  @Field(() => String, { nullable: true })
+  avatarUrl?: string;
+}
+
+/**
+ * Aggregate \"viewer\" type for dashboard hydration after login.
+ */
+@ObjectType()
+export class MeGql {
+  @Field(() => UserGql)
+  user!: UserGql;
+
+  @Field(() => OrgGql, { nullable: true })
+  org?: OrgGql;
+
+  @Field(() => [String])
+  roles!: string[];
+
+  @Field(() => UserSettingsGql, { nullable: true })
+  settings?: UserSettingsGql;
+
+  @Field(() => [SessionGql], { nullable: true })
+  recentSessions?: SessionGql[];
+}
+
 
 

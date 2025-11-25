@@ -426,5 +426,131 @@ Notes:
 > organisation, RBAC, and session management UIs. Login, registration,
 > tokens, and normal API calls remain as defined in `FRONTEND_GUIDE.md`.
 
+---
 
+## 7. Viewer context after login (me, settings, sessions)
+
+After the OIDC login + `/token` exchange (see `FRONTEND_GUIDE.md`), the browser
+has `rt`/`at` cookies for `.novologic.co`. The recommended pattern for the
+dashboard is:
+
+1. Complete `/auth/callback` and `/token` (authorization_code).
+2. On first app load, call **one GraphQL query** to hydrate viewer context:
+   - `meDashboard` (user + org + roles + settings + recent sessions), or
+   - A combination of `meUser`, `meSettings`, `meSessions`.
+
+### 7.1 Query: `meUser` (current user profile)
+
+```graphql
+query MeUser {
+  meUser {
+    id
+    tenantId
+    email
+    status
+  }
+}
+```
+
+This returns the current authenticated user in the active tenant (derived from
+`x-tenant-id` and the JWT).
+
+### 7.2 Query: `meSettings` (current user settings)
+
+Settings are stored in `User.profile` and surfaced as a typed object:
+
+```graphql
+query MeSettings {
+  meSettings {
+    timezone
+    locale
+    theme
+    avatarUrl
+  }
+}
+```
+
+Typical usage:
+
+- Drive the user preferences panel.
+- Use `timezone`/`locale` for date/time formatting.
+- Use `theme` for dark/light mode selection.
+
+### 7.3 Mutation: `updateMeSettings`
+
+```graphql
+mutation UpdateMeSettings($input: UpdateMeSettingsInput!) {
+  updateMeSettings(input: $input) {
+    timezone
+    locale
+    theme
+    avatarUrl
+  }
+}
+```
+
+Example variables:
+
+```json
+{
+  "input": {
+    "timezone": "Asia/Kolkata",
+    "locale": "en-IN",
+    "theme": "dark"
+  }
+}
+```
+
+The mutation upserts the provided fields into `User.profile` for the current
+user in the active tenant.
+
+### 7.4 Aggregate query: `meDashboard`
+
+For most dashboards, a single query is enough to hydrate the global layout:
+
+```graphql
+query MeDashboard {
+  meDashboard {
+    user {
+      id
+      tenantId
+      email
+      status
+    }
+    org {
+      id
+      slug
+      name
+      status
+    }
+    roles
+    settings {
+      timezone
+      locale
+      theme
+      avatarUrl
+    }
+    recentSessions {
+      id
+      tenantId
+      userId
+      ip
+      createdAt
+    }
+  }
+}
+```
+
+Recommended sequence right after auth:
+
+1. `/auth/callback` → `/token` (authorization_code grant, sets `rt`/`at`).
+2. On app boot, send:
+
+```ts
+const res = await authGqlClient.query({ query: MeDashboardDocument });
+// Use res.data.meDashboard to populate user menu, org switcher, theme, etc.
+```
+
+- Use `settings.theme` to initialise your design system theme.
+- Use `roles` and `recentSessions` to drive security/visibility features.
 

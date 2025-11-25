@@ -311,6 +311,79 @@ describe('Auth Flows (e2e)', () => {
       .expect(400);
     expect(reuse.body.code || '').toBeTruthy();
   });
+
+  it('GraphQL viewer: meUser, meSettings, and meDashboard after login', async () => {
+    const query = `
+      query MeViewer {
+        meUser { id email tenantId status }
+        meSettings { timezone locale theme avatarUrl }
+        meDashboard {
+          user { id email tenantId status }
+          org { id slug name status }
+          roles
+          settings { timezone locale theme avatarUrl }
+          recentSessions { id tenantId userId createdAt }
+        }
+      }
+    `;
+    const res = await agent
+      .post('/graphql')
+      .set('x-tenant-id', tenantId)
+      .send({ query })
+      .expect(200);
+    expect(res.body.errors).toBeFalsy();
+    const data = res.body.data;
+    expect(data.meUser).toBeTruthy();
+    expect(data.meUser.email).toBe('user@acme.test');
+    expect(data.meDashboard.user.id).toBe(data.meUser.id);
+    expect(data.meDashboard.org.id).toBe(tenantId);
+    expect(Array.isArray(data.meDashboard.roles)).toBe(true);
+  });
+
+  it('GraphQL viewer: updateMeSettings persists settings in profile', async () => {
+    const mutation = `
+      mutation UpdateMe($input: UpdateMeSettingsInput!) {
+        updateMeSettings(input: $input) {
+          timezone
+          locale
+          theme
+          avatarUrl
+        }
+      }
+    `;
+    const variables = {
+      input: {
+        timezone: 'Asia/Kolkata',
+        locale: 'en-IN',
+        theme: 'dark',
+      },
+    };
+    const updateRes = await agent
+      .post('/graphql')
+      .set('x-tenant-id', tenantId)
+      .send({ query: mutation, variables })
+      .expect(200);
+    expect(updateRes.body.errors).toBeFalsy();
+    const updated = updateRes.body.data.updateMeSettings;
+    expect(updated.timezone).toBe('Asia/Kolkata');
+    expect(updated.locale).toBe('en-IN');
+    expect(updated.theme).toBe('dark');
+
+    const settingsQuery = `
+      query MeSettings {
+        meSettings { timezone locale theme }
+      }
+    `;
+    const settingsRes = await agent
+      .post('/graphql')
+      .set('x-tenant-id', tenantId)
+      .send({ query: settingsQuery })
+      .expect(200);
+    expect(settingsRes.body.errors).toBeFalsy();
+    expect(settingsRes.body.data.meSettings.timezone).toBe('Asia/Kolkata');
+    expect(settingsRes.body.data.meSettings.locale).toBe('en-IN');
+    expect(settingsRes.body.data.meSettings.theme).toBe('dark');
+  });
 });
 
 
