@@ -3,7 +3,10 @@
 * Module: modules/auth/oidc
 * Purpose: Login UI for OP session
 * Author: Cursor / BharatERP
-* Last-updated: 2025-11-08
+* Last-updated: 2025-11-25
+* Notes:
+* - Resolves tenant for login via RequestContext or ClientService.resolveClient
+*   so global realm clients (e.g. app-spa) do not require x-tenant-id on /login.
 */
 
 import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
@@ -20,6 +23,7 @@ import { LoginAttemptsService } from '../services/login-attempts.service';
 import { LoggerService } from '../../../../shared/logger';
 import { CsrfGuard } from '../../../common/guards/csrf.guard';
 import { randomUUID } from 'crypto';
+import { ClientService } from '../../clients/services/client.service';
 
 @Controller('/login')
 export class LoginController {
@@ -30,6 +34,7 @@ export class LoginController {
     private readonly audit: AuditService,
     private readonly attempts: LoginAttemptsService,
     private readonly logger: LoggerService,
+    private readonly clients: ClientService,
     @Inject(CONFIG_DI_TOKEN) private readonly config: AppConfig,
   ) {
     this.users = dataSource.getRepository(User);
@@ -82,10 +87,18 @@ export class LoginController {
     @Body('code_challenge_method') codeChallengeMethod: string,
     @Res() res: Response,
   ) {
-    const tenantId = RequestContext.get()?.tenantId;
+    // Resolve effective tenant for login:
+    // - Prefer RequestContext.tenantId (x-tenant-id / query / subdomain).
+    // - Fallback to ClientService.resolveClient to support global realm clients
+    //   like app-spa that do not send x-tenant-id on /authorize or /login.
+    const ctxTenantId = RequestContext.get()?.tenantId;
+    const { tenantId } = await this.clients.resolveClient(ctxTenantId, clientId);
     if (!tenantId) {
-      this.logger.warn({ clientId, redirectUri }, 'Login attempt without tenant in context');
+      this.logger.warn({ clientId, redirectUri }, 'Login attempt without resolvable tenant');
       throw new HttpException({ code: 'invalid_request', message: 'Missing tenant' }, HttpStatus.BAD_REQUEST);
+    }
+    if (tenantId !== ctxTenantId) {
+      RequestContext.set({ tenantId });
     }
     const ip = (res.req as any).ip as string | undefined || (res.req.socket?.remoteAddress as string | undefined) || '';
     const ua = (res.req.headers['user-agent'] as string | undefined) || '';
