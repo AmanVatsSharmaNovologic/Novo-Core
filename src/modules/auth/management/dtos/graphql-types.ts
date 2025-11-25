@@ -67,8 +67,8 @@ export class RoleGql {
   @Field()
   name!: string;
 
-  @Field({ nullable: true })
-  description?: string | null;
+  @Field(() => String, { nullable: true })
+  description?: string;
 }
 
 @ObjectType()
@@ -82,8 +82,8 @@ export class PermissionGql {
   @Field()
   key!: string;
 
-  @Field({ nullable: true })
-  description?: string | null;
+  @Field(() => String, { nullable: true })
+  description?: string;
 }
 
 /**

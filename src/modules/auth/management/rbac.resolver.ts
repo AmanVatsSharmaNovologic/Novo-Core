@@ -43,7 +43,7 @@ export class RbacResolverGql {
       id: r.id,
       tenantId: r.tenantId,
       name: r.name,
-      description: r.description ?? null,
+      description: r.description ?? undefined,
     }));
   }
 
@@ -56,7 +56,7 @@ export class RbacResolverGql {
       id: p.id,
       tenantId: p.tenantId,
       key: p.key,
-      description: p.description ?? null,
+      description: p.description ?? undefined,
     }));
   }
 
@@ -94,7 +94,7 @@ export class RbacResolverGql {
       id: saved.id,
       tenantId: saved.tenantId,
       name: saved.name,
-      description: saved.description ?? null,
+      description: saved.description ?? undefined,
     };
   }
 
