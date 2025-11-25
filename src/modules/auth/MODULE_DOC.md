@@ -8,7 +8,7 @@ updated: 2025-11-22 (IST)
 - OIDC Provider at `https://api.novologic.co` (REST) for user registration/login/session:
   - `/.well-known/openid-configuration`, `/jwks.json`
   - `/authorize` (code + PKCE), `/token` (code→token, refresh, client_credentials), `/userinfo`, `/introspect`, `/revoke`
-  - `/public/register` (public registration), `/login` (HTML form), `/consent` (scope consent screen)
+  - `/public/register` (public registration), `/login` (HTML form), `/consent` (scope consent screen for non–first‑party clients; first‑party dashboard client `app-spa` is auto‑approved server‑side)
 - GraphQL Admin API at `/graphql` (for internal consoles / back‑office):
   - `tenants()`, `users(tenantId)`, `registerUser(input)`
   - Organisation & team management: `meOrgs`, `orgMembers(tenantId)`, `inviteMember(input)`, `updateMemberRoles(input)`
@@ -111,6 +111,7 @@ High‑level:
    - `grant_types=["authorization_code","refresh_token"]`  
    - `firstParty=true`
 2. Browser builds a PKCE pair and redirects user to `https://api.novologic.co/authorize`.
+   - For `clientId=app-spa`, the flow is: `/authorize` → `/login` → `/consent` (auto‑approve, no HTML) → redirect back to SPA with `code` + `state`.
 3. On callback, SPA exchanges `code` for tokens at `POST https://api.novologic.co/token` with `grant_type=authorization_code` and `credentials: 'include'`.
    - Response: `{ access_token, token_type, expires_in, refresh_token }`  
    - Cookies: `rt` (30d) + `at` (5m) are set for `.novologic.co`.
@@ -212,6 +213,7 @@ In a future **centralized AuthZ** service, we can:
 - Expose the same RBAC logic over HTTP/gRPC for live authorization decisions (e.g. `POST /authz/check`), with microservices calling it when they need stronger consistency than the cached `permissions[]` in the token.
 
 ## Changelog
+- 2025‑11‑25: Auto‑approved consent for first‑party dashboard client (`clientId=app-spa`) in `/consent` to remove redundant consent UI while keeping consent for non–first‑party clients; updated frontend guide accordingly.
 - 2025‑11‑25: Added GraphQL session management resolvers (`meSessions`, `userSessions`, `revokeSession`) and documented session management flows for self-service and admin UIs.
 - 2025‑11‑24: Added `/public/register` for global identity + platform-tenant user creation (v1, auto-verified); improved login UX to preserve OIDC/PKCE params and surface errors; documented registration flow in `FRONTEND_GUIDE.md` and clarified resource-server norms.
 - 2025‑11‑24: Added query-based tenant resolution for `/authorize` and `/token` (supports `x-tenant-id` / `tenant_id` query params; infra hosts `auth.novologic.co` and `api.novologic.co` no longer treated as tenant slugs); wired initial tenant/client seed tool and updated frontend guidance for sandbox2 → app migration.

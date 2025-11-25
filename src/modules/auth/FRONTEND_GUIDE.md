@@ -22,7 +22,7 @@
   - `GET https://api.novologic.co/jwks.json`
   - `GET https://api.novologic.co/authorize`
   - `GET https://api.novologic.co/login`
-  - `GET https://api.novologic.co/consent`
+  - `GET https://api.novologic.co/consent` (interactive consent **only** for non–first‑party clients; the main dashboard client `app-spa` is auto‑approved server‑side and will not show this page)
   - `POST https://api.novologic.co/token`
   - `GET https://api.novologic.co/userinfo`
   - `POST https://api.novologic.co/introspect`
