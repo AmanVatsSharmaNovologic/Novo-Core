@@ -41,8 +41,23 @@ async function bootstrap() {
     origin: (origin, callback) => {
       // Allow same-origin or non-browser (e.g., curl, Postman)
       if (!origin) return callback(null, true);
-      const allowed = config.cors.allowedOrigins.some((o) => origin === o) ||
+
+      try {
+        const originUrl = new URL(origin);
+        const issuerHost = new URL(config.domain.issuerUrl).host;
+        const publicHost = new URL(config.domain.publicBaseUrl).host;
+        // Always allow requests coming from the configured issuer/public hosts
+        if (originUrl.host === issuerHost || originUrl.host === publicHost) {
+          return callback(null, true);
+        }
+      } catch {
+        // If origin parsing fails, fall back to explicit allowlist/wildcard
+      }
+
+      const allowed =
+        config.cors.allowedOrigins.some((o) => origin === o) ||
         origin.endsWith('.novologic.co');
+
       return allowed ? callback(null, true) : callback(new Error('CORS blocked by policy'));
     },
   });
