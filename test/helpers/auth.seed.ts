@@ -23,6 +23,7 @@ export interface SeedResult {
   password: string;
   clientPublic: Client;
   clientConfidential: Client;
+  clientExternal: Client;
   role: Role;
   permission: Permission;
 }
@@ -106,7 +107,21 @@ export async function seedAuth(app: INestApplication, tenantSlug = 'acme'): Prom
     clientConfidential = await clients.save(clientConfidential);
   }
 
-  return { tenant, user, password: plainPassword, clientPublic, clientConfidential, role, permission };
+  let clientExternal = await clients.findOne({ where: { tenantId: tenant.id, clientId: 'ext-spa' } });
+  if (!clientExternal) {
+    clientExternal = clients.create({
+      tenantId: tenant.id,
+      clientId: 'ext-spa',
+      grantTypes: ['authorization_code'],
+      redirectUris: ['https://external.example/callback'],
+      postLogoutRedirectUris: ['https://external.example'],
+      scopes: ['openid', 'profile', 'email'],
+      firstParty: false,
+    });
+    clientExternal = await clients.save(clientExternal);
+  }
+
+  return { tenant, user, password: plainPassword, clientPublic, clientConfidential, clientExternal, role, permission };
 }
 
 

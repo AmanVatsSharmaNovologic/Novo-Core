@@ -67,6 +67,52 @@ export class ConsentController {
     if (!sessionCookie) return res.redirect(`/login?${req.url.split('?')[1]}`);
     try {
       const sess = await this.op.verify(sessionCookie);
+
+      // For first-party dashboard client app-spa, auto-approve consent and issue code immediately.
+      if (client.firstParty && client.clientId === 'app-spa') {
+        const requested = (scope || '').split(/\s+/).filter(Boolean);
+        const allowed = client.scopes || [];
+        const approvedScopes = requested.filter((s) => allowed.includes(s)).join(' ');
+
+        const code = await this.codes.issue({
+          tenantId,
+          userId: sess.userId,
+          clientId: client.id,
+          redirectUri,
+          scope: approvedScopes,
+          codeChallenge,
+          codeChallengeMethod,
+        });
+
+        const url = new URL(redirectUri);
+        url.searchParams.set('code', code);
+        if (state) {
+          url.searchParams.set('state', state);
+        }
+
+        await this.audit.logEvent({
+          tenantId,
+          actorId: sess.userId,
+          type: 'consent.approved',
+          resource: client.id,
+          metadata: { clientId: client.clientId, scope: approvedScopes, auto: true },
+        });
+
+        this.logger.info(
+          {
+            tenantId,
+            userId: sess.userId,
+            clientId: client.clientId,
+            redirectUri,
+            scope: approvedScopes,
+            state,
+          },
+          'Auto-approved consent for first-party client; issued authorization code',
+        );
+
+        return res.redirect(url.toString());
+      }
+
       // Reuse existing CSRF cookie if present; otherwise generate a fresh one.
       const existingCsrf: string | undefined = (req.cookies?.csrf as string | undefined) ?? undefined;
       const csrfToken = existingCsrf || randomUUID();
@@ -137,6 +183,25 @@ export class ConsentController {
     }
     if (!client.grantTypes?.includes('authorization_code')) {
       throw new HttpException({ code: 'unauthorized_client', message: 'Grant not allowed' }, HttpStatus.BAD_REQUEST);
+    }
+
+    // app-spa is auto-approved in GET /consent and should never post an interactive decision.
+    if (client.firstParty && client.clientId === 'app-spa') {
+      this.logger.warn(
+        {
+          tenantId,
+          clientId: client.clientId,
+          decision,
+          redirectUri,
+          scope,
+          state,
+        },
+        'Received unexpected consent POST for first-party client; consent is auto-approved server-side',
+      );
+      throw new HttpException(
+        { code: 'invalid_request', message: 'Consent is not required for this client' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
     this.logger.info(
       {

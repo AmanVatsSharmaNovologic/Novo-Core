@@ -26,6 +26,7 @@ describe('Auth Flows (e2e)', () => {
   let app: INestApplication;
   let agent: SuperAgentTest;
   let tenantId: string;
+  let externalRedirectUri: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -36,6 +37,7 @@ describe('Auth Flows (e2e)', () => {
     agent = request.agent(app.getHttpServer());
     const seeded = await seedAuth(app);
     tenantId = seeded.tenant.id;
+    externalRedirectUri = 'https://external.example/callback';
   });
 
   it('GraphQL: registerUser mutation creates a user', async () => {
@@ -167,28 +169,9 @@ describe('Auth Flows (e2e)', () => {
     // Should redirect to /consent
     expect(loginPost.headers.location).toContain('/consent');
 
-    // GET consent to fetch csrf
-    const consentGet = await agent.get(loginPost.headers.location).set('x-tenant-id', tenantId).expect(200);
-    const csrf2 = getCookieValue(consentGet.headers['set-cookie'] as string[] | undefined, 'csrf');
-    expect(csrf2).toBeTruthy();
-
-    // Approve consent
-    const consentPost = await agent
-      .post('/consent')
-      .set('x-tenant-id', tenantId)
-      .set('x-csrf-token', csrf2 as string)
-      .type('form')
-      .send({
-        decision: 'approve',
-        client_id: 'app-spa',
-        redirect_uri: 'https://app.example/callback',
-        scope: 'openid profile email',
-        state: 'xyz',
-        code_challenge: 'plain-chal',
-        code_challenge_method: 'plain',
-      })
-      .expect(302);
-    const redirectUrl = new URL(consentPost.headers.location);
+    // GET consent for app-spa should auto-approve and immediately redirect to redirect_uri with code+state
+    const consentRedirect = await agent.get(loginPost.headers.location).set('x-tenant-id', tenantId).expect(302);
+    const redirectUrl = new URL(consentRedirect.headers.location);
     expect(redirectUrl.searchParams.get('code')).toBeTruthy();
     const code = redirectUrl.searchParams.get('code') as string;
 
@@ -217,6 +200,85 @@ describe('Auth Flows (e2e)', () => {
     // Using only the cookies (no Authorization header), we can hit a protected route
     const protectedRes = await agent.get('/').set('x-tenant-id', tenantId).expect(200);
     expect(protectedRes.text || protectedRes.body).toBeTruthy();
+  });
+
+  it('OIDC authorization code flow with interactive consent for non-first-party client', async () => {
+    const authorize = await agent
+      .get(
+        '/authorize?client_id=ext-spa&redirect_uri=' +
+          encodeURIComponent(externalRedirectUri) +
+          '&response_type=code' +
+          '&scope=' +
+          encodeURIComponent('openid profile email') +
+          '&state=abc' +
+          '&code_challenge=ext-chal' +
+          '&code_challenge_method=plain',
+      )
+      .set('x-tenant-id', tenantId)
+      .expect(302);
+    expect(authorize.headers.location).toContain('/login');
+
+    const loginGet = await agent.get(authorize.headers.location).set('x-tenant-id', tenantId).expect(200);
+    const csrfCookie = getCookieValue(loginGet.headers['set-cookie'] as string[] | undefined, 'csrf');
+    expect(csrfCookie).toBeTruthy();
+
+    const loginPost = await agent
+      .post('/login')
+      .set('x-tenant-id', tenantId)
+      .set('x-csrf-token', csrfCookie as string)
+      .type('form')
+      .send({
+        email: 'user@acme.test',
+        password: 'Password123!',
+        client_id: 'ext-spa',
+        redirect_uri: externalRedirectUri,
+        response_type: 'code',
+        scope: 'openid profile email',
+        state: 'abc',
+        code_challenge: 'ext-chal',
+        code_challenge_method: 'plain',
+      })
+      .expect(302);
+    expect(loginPost.headers.location).toContain('/consent');
+
+    const consentGet = await agent.get(loginPost.headers.location).set('x-tenant-id', tenantId).expect(200);
+    const csrf2 = getCookieValue(consentGet.headers['set-cookie'] as string[] | undefined, 'csrf');
+    expect(csrf2).toBeTruthy();
+
+    const consentPost = await agent
+      .post('/consent')
+      .set('x-tenant-id', tenantId)
+      .set('x-csrf-token', csrf2 as string)
+      .type('form')
+      .send({
+        decision: 'approve',
+        client_id: 'ext-spa',
+        redirect_uri: externalRedirectUri,
+        scope: 'openid profile email',
+        state: 'abc',
+        code_challenge: 'ext-chal',
+        code_challenge_method: 'plain',
+      })
+      .expect(302);
+    const redirectUrl = new URL(consentPost.headers.location);
+    expect(redirectUrl.origin + redirectUrl.pathname).toBe(externalRedirectUri);
+    expect(redirectUrl.searchParams.get('code')).toBeTruthy();
+    const code = redirectUrl.searchParams.get('code') as string;
+
+    const tokenRes = await agent
+      .post('/token')
+      .set('x-tenant-id', tenantId)
+      .type('form')
+      .send({
+        grant_type: 'authorization_code',
+        client_id: 'ext-spa',
+        code,
+        redirect_uri: externalRedirectUri,
+        code_verifier: 'ext-chal',
+      })
+      .expect(201);
+    expect(tokenRes.body.access_token).toBeTruthy();
+    // Non-first-party SPA should not rely on browser cookies for tokens in this test.
   });
 
   it('Refresh token rotation using rt cookie fallback and reuse detection', async () => {
