@@ -14,6 +14,7 @@ updated: 2025-11-22 (IST)
   - Organisation & team management: `meOrgs`, `orgMembers(tenantId)`, `inviteMember(input)`, `updateMemberRoles(input)`
   - RBAC management: `roles(tenantId)`, `permissions(tenantId)`, `createRole(input)`, `updateRolePermissions(input)`
   - Session management: `meSessions`, `userSessions(input)`, `revokeSession(input)`
+  - Viewer context & settings: `meUser`, `meSettings`, `updateMeSettings(input)`, `meDashboard`
 - Sessions & refresh rotation, MFA (TOTP), RBAC scaffolding, audit logs
 
 ## Folder Documentation
@@ -213,6 +214,7 @@ In a future **centralized AuthZ** service, we can:
 - Expose the same RBAC logic over HTTP/gRPC for live authorization decisions (e.g. `POST /authz/check`), with microservices calling it when they need stronger consistency than the cached `permissions[]` in the token.
 
 ## Changelog
+- 2025‑11‑25: Added GraphQL viewer context and settings resolvers (`meUser`, `meSettings`, `updateMeSettings`, `meDashboard`) for post-login dashboard hydration; documented usage in frontend guides.
 - 2025‑11‑25: Auto‑approved consent for first‑party dashboard client (`clientId=app-spa`) in `/consent` to remove redundant consent UI while keeping consent for non–first‑party clients; updated frontend guide accordingly.
 - 2025‑11‑25: Added GraphQL session management resolvers (`meSessions`, `userSessions`, `revokeSession`) and documented session management flows for self-service and admin UIs.
 - 2025‑11‑24: Added `/public/register` for global identity + platform-tenant user creation (v1, auto-verified); improved login UX to preserve OIDC/PKCE params and surface errors; documented registration flow in `FRONTEND_GUIDE.md` and clarified resource-server norms.

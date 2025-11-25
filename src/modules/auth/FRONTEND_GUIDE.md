@@ -309,6 +309,13 @@ export default function AuthCallback() {
 - **Pattern**: rely on HttpOnly `at` cookie; always send `credentials: 'include'` and `x-tenant-id`.
 - **No need** to manually attach `Authorization` for browser calls.
 
+After login/callback and `/token`:
+
+- Use REST APIs for transactional data (`/v1/...`).
+- Use GraphQL at `/graphql` (see `ORG_RBAC_FRONTEND_GUIDE.md`) to fetch viewer
+  context (`meDashboard` / `meUser` / `meSettings` / `meSessions`) using the
+  same browser cookies.
+
 ```ts
 // utils/api/fetchJson.ts
 export async function fetchJson(path: string, init: RequestInit = {}) {
