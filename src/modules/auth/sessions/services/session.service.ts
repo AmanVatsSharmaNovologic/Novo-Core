@@ -2,7 +2,7 @@
 * File: src/modules/auth/sessions/services/session.service.ts
 * Module: modules/auth/sessions
 * Purpose: Manage sessions and refresh token rotation with reuse detection
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Stores only hashes of refresh tokens

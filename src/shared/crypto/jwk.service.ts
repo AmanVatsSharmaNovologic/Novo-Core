@@ -2,7 +2,7 @@
 * File: src/shared/crypto/jwk.service.ts
 * Module: shared/crypto
 * Purpose: Manage JWK key pairs, rotation, JWKS publishing, and JWT signing
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Uses jose for modern JOSE/JWT operations

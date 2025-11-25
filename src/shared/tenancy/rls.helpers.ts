@@ -2,7 +2,7 @@
 * File: src/shared/tenancy/rls.helpers.ts
 * Module: shared/tenancy
 * Purpose: Helpers to set Postgres RLS tenant parameter for current transaction
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Use with an EntityManager or QueryRunner inside a transaction

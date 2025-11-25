@@ -2,7 +2,7 @@
 * File: src/modules/auth/sessions/sessions.module.ts
 * Module: modules/auth/sessions
 * Purpose: Module providing SessionService
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Exports repositories and service for use by OIDC/token flows

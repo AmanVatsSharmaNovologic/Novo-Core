@@ -1,6 +1,6 @@
-# Cursor AI — Enterprise Refactor Plan
+# Aman Sharma / NovologicAI — Enterprise Refactor Plan
 
-**SonuRam ji — Purpose:** A compact, enterprise-grade .md command plan for Cursor AI to refactor `src/` and configs for scalability, clean architecture, and maintainability. The agent must auto-detect current state, present a preview diff, then safely apply changes while keeping backward compatibility and ensuring builds/tests pass.
+**SonuRam ji — Purpose:** A compact, enterprise-grade .md command plan for Aman Sharma / NovologicAI to refactor `src/` and configs for scalability, clean architecture, and maintainability. The agent must auto-detect current state, present a preview diff, then safely apply changes while keeping backward compatibility and ensuring builds/tests pass.
 
 ---
 
@@ -14,7 +14,7 @@
 
 ## 2. Pre-check (required)
 
-Cursor AI must run these checks before proposing or applying changes:
+Aman Sharma / NovologicAI must run these checks before proposing or applying changes:
 
 1. `git status --porcelain` — ensure clean working tree.
 2. Detect package manager: `pnpm | yarn | npm`.
@@ -92,7 +92,7 @@ Notes:
 * Move files into module folder if imports show strong coupling: heuristic = > 3 imports from feature.
 * Replace relative imports like `../../../shared/utils` with `@shared/utils` and add `tsconfig` path mapping.
 
-Regex examples for Cursor AI engine (must run in dry-run):
+Regex examples for Aman Sharma / NovologicAI engine (must run in dry-run):
 
 * Find files to rename:
 
@@ -113,7 +113,7 @@ Regex examples for Cursor AI engine (must run in dry-run):
 }
 ```
 
-* Run an import rewrite tool (Cursor AI step): parse AST and replace relative paths with matching `@` alias.
+* Run an import rewrite tool (Aman Sharma / NovologicAI step): parse AST and replace relative paths with matching `@` alias.
 * Ensure `eslint` + `tsserver` aware of paths.
 
 ## 8. Linting & Naming Rules (ESLint + plugin)
@@ -135,7 +135,7 @@ Regex examples for Cursor AI engine (must run in dry-run):
 * Add `refactor:verify` script that runs the above.
 * For large projects, split tests by module to run in parallel.
 
-## 11. Rollout Plan (steps Cursor AI should follow)
+## 11. Rollout Plan (steps Aman Sharma / NovologicAI should follow)
 
 1. **Scan** — produce `refactor-scan.json`.
 2. **Propose** — produce a patchset (git branch `refactor/structure-YYYYMMDD`) with human-readable PR summary and file diff preview.
@@ -152,7 +152,7 @@ Regex examples for Cursor AI engine (must run in dry-run):
 * Ignore binary files and third-party vendor folders.
 * When ambiguous (e.g., file used by multiple domains), prompt user with ranked suggestions and keep original until confirmation.
 
-## 13. Cursor AI Task Templates (use as agent `tasks`)
+## 13. Aman Sharma / NovologicAI Task Templates (use as agent `tasks`)
 
 ### scan (dry)
 
@@ -210,7 +210,7 @@ git checkout main && git reset --hard origin/main
 
 ---
 
-## Final notes for the Cursor AI agent
+## Final notes for the Aman Sharma / NovologicAI agent
 
 * Always offer a preview and a single `--apply` button. Do not mutate master/main directly.
 * Keep changes atomic and per-module so rollbacks are easy.

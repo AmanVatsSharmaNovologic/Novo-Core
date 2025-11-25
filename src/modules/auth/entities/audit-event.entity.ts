@@ -2,7 +2,7 @@
 * File: src/modules/auth/entities/audit-event.entity.ts
 * Module: modules/auth/entities
 * Purpose: Structured audit trail of auth/admin actions
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - actorId optional for system events

@@ -2,7 +2,7 @@
 * File: src/modules/auth/management/management.module.ts
 * Module: modules/auth/management
 * Purpose: GraphQL management module for tenants and users
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Extend with roles, clients, policies

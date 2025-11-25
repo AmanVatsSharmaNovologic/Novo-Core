@@ -2,7 +2,7 @@
 * File: src/modules/auth/management/user.resolver.ts
 * Module: modules/auth/management
 * Purpose: GraphQL resolver for users
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Minimal queries for now

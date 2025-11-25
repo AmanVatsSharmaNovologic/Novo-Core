@@ -2,7 +2,7 @@
 * File: src/tools/db-migrate.ts
 * Module: tools/db-migrate
 * Purpose: Run TypeORM migrations programmatically using app config
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Reads DB config from buildAppConfig()

@@ -2,7 +2,7 @@
 * File: src/modules/auth/management/dtos/graphql-types.ts
 * Module: modules/auth/management
 * Purpose: GraphQL types for management API
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

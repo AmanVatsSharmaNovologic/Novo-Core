@@ -2,7 +2,7 @@
 * File: src/common/errors/index.ts
 * Module: common/errors
 * Purpose: Re-export error classes for ergonomic imports
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Import from this barrel file instead of deep paths

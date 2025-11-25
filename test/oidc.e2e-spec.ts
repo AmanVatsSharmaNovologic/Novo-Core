@@ -2,7 +2,7 @@
 * File: test/oidc.e2e-spec.ts
 * Module: tests/e2e
 * Purpose: E2E tests for OIDC endpoints (JWKS, Discovery)
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Lightweight smoke tests

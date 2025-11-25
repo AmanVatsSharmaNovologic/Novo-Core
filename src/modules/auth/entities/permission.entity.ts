@@ -2,7 +2,7 @@
 * File: src/modules/auth/entities/permission.entity.ts
 * Module: modules/auth/entities
 * Purpose: Permission entity for RBAC within tenant scope
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - key unique per tenant

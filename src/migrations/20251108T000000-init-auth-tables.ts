@@ -2,7 +2,7 @@
 * File: src/migrations/20251108T000000-init-auth-tables.ts
 * Module: migrations
 * Purpose: Initial schema for multi-tenant auth (TypeORM migration)
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Creates core tables with tenant_id indexes and constraints

@@ -2,7 +2,7 @@
 * File: src/modules/auth/entities/user.entity.ts
 * Module: modules/auth/entities
 * Purpose: User entity with tenant scope and auth profile
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Email unique per tenant (composite unique)

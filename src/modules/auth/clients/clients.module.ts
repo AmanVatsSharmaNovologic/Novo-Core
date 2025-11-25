@@ -2,7 +2,7 @@
 * File: src/modules/auth/clients/clients.module.ts
 * Module: modules/auth/clients
 * Purpose: Module providing ClientService
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Exports repository and service

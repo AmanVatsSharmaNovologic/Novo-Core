@@ -2,7 +2,7 @@
 * File: src/shared/graphql/graphql-complexity.ts
 * Module: shared/graphql
 * Purpose: GraphQL query complexity rule factory
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Restricts complex queries to prevent abuse

@@ -2,7 +2,7 @@
 * File: src/shared/tenancy/tenancy.module.ts
 * Module: shared/tenancy
 * Purpose: Global tenancy module exposing TenantResolverService
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Consumed by middleware and services that require tenant context

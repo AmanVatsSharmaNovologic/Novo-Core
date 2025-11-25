@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/controllers/introspect.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Token Introspection - minimal active flag
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

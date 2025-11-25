@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/controllers/authorize.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Authorization endpoint (code+PKCE)
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-24
 * Notes:
 * - Redirects to /login if not authenticated; then to /consent

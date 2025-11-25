@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/controllers/token.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Token endpoint (code exchange + refresh + client_credentials)
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-24
 * Notes:
 * - For authorization_code grant, supports global realm clients (e.g., app-spa) without requiring tenantId from the frontend.

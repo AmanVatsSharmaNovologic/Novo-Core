@@ -2,7 +2,7 @@
 * File: src/modules/auth/audit/audit.module.ts
 * Module: modules/auth/audit
 * Purpose: Module providing AuditService
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Exported for use in auth and management flows

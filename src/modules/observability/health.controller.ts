@@ -2,7 +2,7 @@
 * File: src/modules/observability/health.controller.ts
 * Module: modules/observability
 * Purpose: Basic health endpoint with DB check
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Path: /health

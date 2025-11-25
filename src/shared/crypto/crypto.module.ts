@@ -2,7 +2,7 @@
 * File: src/shared/crypto/crypto.module.ts
 * Module: shared/crypto
 * Purpose: Crypto module exposing JwkService and rotation scheduler
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Schedules periodic ensureActiveKey/rotation checks

@@ -2,7 +2,7 @@
 * File: src/shared/logger.module.ts
 * Module: shared/logger
 * Purpose: Provide LoggerService via DI and export it for app-wide usage
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Depends on AppConfigModule for configuration

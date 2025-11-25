@@ -2,7 +2,7 @@
 * File: src/modules/auth/passwords/passwords.module.ts
 * Module: modules/auth/passwords
 * Purpose: Module providing PasswordService
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Exported for use in auth flows

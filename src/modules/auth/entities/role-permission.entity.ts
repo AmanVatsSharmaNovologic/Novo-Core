@@ -2,7 +2,7 @@
 * File: src/modules/auth/entities/role-permission.entity.ts
 * Module: modules/auth/entities
 * Purpose: RolePermission join mapping
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Composite unique (tenantId, roleId, permissionId)

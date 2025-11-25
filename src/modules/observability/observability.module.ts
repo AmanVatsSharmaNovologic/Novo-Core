@@ -2,7 +2,7 @@
 * File: src/modules/observability/observability.module.ts
 * Module: modules/observability
 * Purpose: Observability module exposing health endpoints
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Extend with metrics later

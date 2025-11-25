@@ -2,7 +2,7 @@
 * File: src/shared/request-context.ts
 * Module: shared/context
 * Purpose: AsyncLocalStorage-based request context (requestId, tenantId, userId)
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Provides static helpers to set/get per-request metadata

@@ -2,7 +2,7 @@
 * File: src/app.module.ts
 * Module: app
 * Purpose: Root module bootstrapping core modules and global providers
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-15
 * Notes:
 * - Applies RequestContextMiddleware globally for requestId propagation

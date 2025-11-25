@@ -2,7 +2,7 @@
 * File: src/common/errors/app-error.ts
 * Module: common/errors
 * Purpose: Base AppError class with code for domain-specific error handling
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - All custom errors must extend AppError

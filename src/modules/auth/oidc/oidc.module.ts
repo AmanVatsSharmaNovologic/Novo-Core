@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/oidc.module.ts
 * Module: modules/auth/oidc
 * Purpose: OIDC REST endpoints module (JWKS for now)
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Extensible with authorize, token, userinfo, introspect, revoke

@@ -2,7 +2,7 @@
 * File: src/modules/auth/passwords/services/password.service.ts
 * Module: modules/auth/passwords
 * Purpose: Argon2id password hashing and verification with policy checks
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

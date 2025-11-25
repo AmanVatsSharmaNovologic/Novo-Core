@@ -2,7 +2,7 @@
 * File: src/modules/auth/clients/services/client.service.ts
 * Module: modules/auth/clients
 * Purpose: Client lookup and utilities
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-24
 * Notes:
 * - Supports tenant-scoped and global realm clients (isGlobalRealm)

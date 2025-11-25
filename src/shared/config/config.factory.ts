@@ -2,7 +2,7 @@
 * File: src/shared/config/config.factory.ts
 * Module: shared/config
 * Purpose: Build and validate application configuration from environment variables
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Uses Zod runtime validation and safe defaults for DX

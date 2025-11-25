@@ -2,7 +2,7 @@
 * File: src/modules/auth/entities/refresh-token.entity.ts
 * Module: modules/auth/entities
 * Purpose: Refresh token entity with rotation and reuse detection
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - tokenHash indexed; never store raw token

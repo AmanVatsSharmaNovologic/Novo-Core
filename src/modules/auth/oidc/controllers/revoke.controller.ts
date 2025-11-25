@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/controllers/revoke.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OAuth2 Token Revocation - revoke refresh token chains; audit access token revocation
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-15
 */
 

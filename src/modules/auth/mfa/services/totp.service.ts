@@ -2,7 +2,7 @@
 * File: src/modules/auth/mfa/services/totp.service.ts
 * Module: modules/auth/mfa
 * Purpose: TOTP MFA generation and verification with backup codes
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

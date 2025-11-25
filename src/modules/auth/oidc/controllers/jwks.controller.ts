@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/controllers/jwks.controller.ts
 * Module: modules/auth/oidc
 * Purpose: JWKS endpoint exposing active/retired public keys
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Path: /jwks.json

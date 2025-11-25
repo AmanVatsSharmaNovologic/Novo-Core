@@ -2,7 +2,7 @@
 * File: src/modules/auth/audit/audit.service.ts
 * Module: modules/auth/audit
 * Purpose: Persist structured audit events
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Use for login, token actions, admin changes

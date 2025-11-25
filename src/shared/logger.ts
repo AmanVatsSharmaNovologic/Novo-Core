@@ -2,7 +2,7 @@
 * File: src/shared/logger.ts
 * Module: shared/logger
 * Purpose: Pino-based LoggerService wrapper with requestId and context support
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Pretty transport in development, JSON in production

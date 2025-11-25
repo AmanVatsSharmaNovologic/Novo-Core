@@ -2,7 +2,7 @@
 * File: src/modules/common/filters/http-exception.filter.ts
 * Module: modules/common/filters
 * Purpose: Global HTTP exception filter mapping AppError to status codes
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

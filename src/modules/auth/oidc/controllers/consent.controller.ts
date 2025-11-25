@@ -2,14 +2,15 @@
 * File: src/modules/auth/oidc/controllers/consent.controller.ts
 * Module: modules/auth/oidc
 * Purpose: Consent UI for code flow
-* Author: Cursor / BharatERP
-* Last-updated: 2025-11-24
+* Author: Aman Sharma / Novologic
+* Last-updated: 2025-11-25
 * Notes:
-* - Uses ClientService.resolveClient so global realm clients work without explicit tenantId from the frontend
+* - Uses ClientService.resolveClient so global realm clients work without explicit tenantId from the frontend.
+* - Aligns CSRF handling with login: reuses existing csrf cookie and disables caching.
 */
 
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { RequestContext } from '../../../../shared/request-context';
 import { ClientService } from '../../clients/services/client.service';
 import { AuthorizationCodeService } from '../services/authorization-code.service';
@@ -32,6 +33,7 @@ export class ConsentController {
 
   @Get()
   async getConsent(
+    @Req() req: Request,
     @Query('client_id') clientId: string,
     @Query('redirect_uri') redirectUri: string,
     @Query('response_type') responseType: string,
@@ -58,11 +60,13 @@ export class ConsentController {
     if (!client.grantTypes?.includes('authorization_code')) {
       throw new HttpException({ code: 'unauthorized_client', message: 'Grant not allowed' }, HttpStatus.BAD_REQUEST);
     }
-    const sessionCookie = (res.req as any).cookies?.op_session as string | undefined;
-    if (!sessionCookie) return res.redirect(`/login?${res.req.url.split('?')[1]}`);
+    const sessionCookie = (req.cookies?.op_session as string | undefined) ?? (res.req as any)?.cookies?.op_session;
+    if (!sessionCookie) return res.redirect(`/login?${req.url.split('?')[1]}`);
     try {
       const sess = await this.op.verify(sessionCookie);
-      const csrfToken = randomUUID();
+      // Reuse existing CSRF cookie if present; otherwise generate a fresh one.
+      const existingCsrf: string | undefined = (req.cookies?.csrf as string | undefined) ?? undefined;
+      const csrfToken = existingCsrf || randomUUID();
       res.cookie('csrf', csrfToken, {
         httpOnly: false,
         secure: this.config.cookie.secure,
@@ -71,6 +75,8 @@ export class ConsentController {
         path: '/',
         maxAge: 1000 * 60 * 15,
       });
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
       return res.render('consent', {
         clientId,
         redirectUri,

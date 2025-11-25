@@ -2,7 +2,7 @@
 * File: src/modules/auth/sessions/services/op-session.service.ts
 * Module: modules/auth/sessions
 * Purpose: OP login session cookie issuance and verification
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

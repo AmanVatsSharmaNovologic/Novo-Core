@@ -63,7 +63,7 @@ alwaysApply: true
 - UUID v4 default for all IDs (@PrimaryGeneratedColumn('uuid'))
 
 # =============================
-# 9. CURSOR AI USAGE
+# 9. Aman Sharma / NovologicAI USAGE
 # =============================
 - AI must respect folder/module structure
 - Instead of many modules, have sub modules

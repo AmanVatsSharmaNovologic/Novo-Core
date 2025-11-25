@@ -2,7 +2,7 @@
 * File: src/shared/database/database.module.ts
 * Module: shared/database
 * Purpose: TypeORM global database module with snake_case naming and UUIDs
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Loads connection options from typed AppConfig

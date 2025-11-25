@@ -2,7 +2,7 @@
 * File: src/modules/auth/rbac/policy.guard.ts
 * Module: modules/auth/rbac
 * Purpose: Guard to enforce permission checks using metadata
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Assumes request.user.permissions is string[]

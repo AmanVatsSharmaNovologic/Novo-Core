@@ -2,7 +2,7 @@
 * File: src/modules/auth/entities/session.entity.ts
 * Module: modules/auth/entities
 * Purpose: User session entity for device tracking and refresh rotation
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - One session holds multiple refresh tokens (rotation chain)

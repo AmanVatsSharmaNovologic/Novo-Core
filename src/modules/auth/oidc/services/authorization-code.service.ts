@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/services/authorization-code.service.ts
 * Module: modules/auth/oidc
 * Purpose: Issue and validate authorization codes (PKCE)
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Stores codeHash only; verifies code_verifier with code_challenge

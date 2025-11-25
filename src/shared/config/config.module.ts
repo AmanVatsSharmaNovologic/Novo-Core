@@ -2,7 +2,7 @@
 * File: src/shared/config/config.module.ts
 * Module: shared/config
 * Purpose: Provide validated AppConfig via DI and export it globally
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Uses Zod to validate environment variables

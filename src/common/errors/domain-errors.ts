@@ -2,7 +2,7 @@
 * File: src/common/errors/domain-errors.ts
 * Module: common/errors
 * Purpose: Domain error implementations required by workspace rules
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Centralizes domain-specific error types

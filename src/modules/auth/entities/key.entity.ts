@@ -2,7 +2,7 @@
 * File: src/modules/auth/entities/key.entity.ts
 * Module: modules/auth/entities
 * Purpose: JWK key metadata for signing tokens with rotation
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - private material is referenced, not stored (privateRef)

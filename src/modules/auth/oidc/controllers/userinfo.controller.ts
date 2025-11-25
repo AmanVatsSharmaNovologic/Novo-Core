@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/controllers/userinfo.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OIDC UserInfo endpoint - minimal JWT verification
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

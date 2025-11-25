@@ -2,8 +2,8 @@
 * File: src/main.ts
 * Module: app
 * Purpose: Application bootstrap; wires config, CORS, and logging
-* Author: Cursor / BharatERP
-* Last-updated: 2025-11-08
+* Author: Aman Sharma / Novologic
+ * Last-updated: 2025-11-25
 * Notes:
 * - Uses typed AppConfig and Pino LoggerService
 * - Sets global prefix and dynamic CORS for novologic subdomains
@@ -15,6 +15,8 @@ import { AppConfig, CONFIG_DI_TOKEN } from './shared/config/config.types';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
@@ -24,6 +26,15 @@ async function bootstrap() {
   if (config.http.globalPrefix) {
     app.setGlobalPrefix(config.http.globalPrefix);
   }
+
+  // Basic security middlewares (must run before routes)
+  app.use(cookieParser());
+  app.use(
+    helmet({
+      contentSecurityPolicy: false, // GraphQL/Yoga and EJS views manage their own scripts/styles
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   app.enableCors({
     credentials: config.cors.allowCredentials,

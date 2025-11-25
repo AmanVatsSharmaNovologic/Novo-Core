@@ -2,7 +2,7 @@
 * File: src/modules/auth/tokens/token.service.ts
 * Module: modules/auth/tokens
 * Purpose: Issue access and ID tokens using JwkService
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Access token TTL short; ID token for OIDC relying parties

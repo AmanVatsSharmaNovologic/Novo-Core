@@ -2,7 +2,7 @@
 * File: src/modules/auth/entities/tenant.entity.ts
 * Module: modules/auth/entities
 * Purpose: Tenant entity representing a logical organization (multi-tenant)
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - UUID v4 primary key

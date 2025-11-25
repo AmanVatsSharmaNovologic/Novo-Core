@@ -2,7 +2,7 @@
 * File: src/shared/database/snake-naming.strategy.ts
 * Module: shared/database
 * Purpose: TypeORM naming strategy for snake_case tables/columns/relations
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Avoids bringing external packages for naming strategy

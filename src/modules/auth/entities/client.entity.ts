@@ -2,7 +2,7 @@
  * File: src/modules/auth/entities/client.entity.ts
  * Module: modules/auth/entities
  * Purpose: OAuth/OIDC client entity
- * Author: Cursor / BharatERP
+ * Author: Aman Sharma / Novologic
  * Last-updated: 2025-11-24
  * Notes:
  * - clientId unique per tenant

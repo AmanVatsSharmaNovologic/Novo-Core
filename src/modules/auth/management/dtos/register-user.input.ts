@@ -2,7 +2,7 @@
 * File: src/modules/auth/management/dtos/register-user.input.ts
 * Module: modules/auth/management
 * Purpose: DTO for registering a new user
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

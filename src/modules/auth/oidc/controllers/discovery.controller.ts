@@ -2,7 +2,7 @@
 * File: src/modules/auth/oidc/controllers/discovery.controller.ts
 * Module: modules/auth/oidc
 * Purpose: OIDC Discovery document endpoint
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Path: /.well-known/openid-configuration

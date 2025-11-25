@@ -2,7 +2,7 @@
  * File: src/modules/auth/rbac/rbac.module.ts
  * Module: modules/auth/rbac
  * Purpose: RBAC module exposing guards and decorators
- * Author: Cursor / BharatERP
+ * Author: Aman Sharma / Novologic
  * Last-updated: 2025-11-24
  * Notes:
  * - Register PolicyGuard locally or globally as needed

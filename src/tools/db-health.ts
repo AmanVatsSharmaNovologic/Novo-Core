@@ -2,7 +2,7 @@
 * File: src/tools/db-health.ts
 * Module: tools/db-health
 * Purpose: Live-check Postgres connectivity and report issues
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - One-off or watch mode; JSON or pretty output

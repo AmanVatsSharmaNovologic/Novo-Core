@@ -2,17 +2,17 @@
 * File: src/modules/auth/oidc/controllers/login.controller.ts
 * Module: modules/auth/oidc
 * Purpose: Login UI for OP session
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-25
 * Notes:
 * - Resolves tenant for login via RequestContext or ClientService.resolveClient
 *   so global realm clients (e.g. app-spa) do not require x-tenant-id on /login.
 */
 
-import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { PasswordService } from '../../passwords/services/password.service';
 import { RequestContext } from '../../../../shared/request-context';
 import { OpSessionService } from '../../sessions/services/op-session.service';
@@ -43,6 +43,7 @@ export class LoginController {
 
   @Get()
   getLogin(
+    @Req() req: Request,
     @Query('client_id') clientId: string,
     @Query('redirect_uri') redirectUri: string,
     @Query('response_type') responseType: string,
@@ -52,7 +53,10 @@ export class LoginController {
     @Query('code_challenge_method') codeChallengeMethod: string,
     @Res() res: Response,
   ) {
-    const csrfToken = randomUUID();
+    // Use existing CSRF cookie if present to avoid token drift from multiple
+    // preloads/navigations; otherwise generate a fresh token.
+    const existingCsrf: string | undefined = (req.cookies?.csrf as string | undefined) ?? undefined;
+    const csrfToken = existingCsrf || randomUUID();
     res.cookie('csrf', csrfToken, {
       httpOnly: false,
       secure: this.config.cookie.secure,
@@ -61,6 +65,10 @@ export class LoginController {
       path: '/',
       maxAge: 1000 * 60 * 15,
     });
+    // Prevent browsers and intermediaries from caching the login form, which
+    // can otherwise serve stale CSRF tokens or OIDC parameters.
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
     return res.render('login', {
       clientId,
       redirectUri,

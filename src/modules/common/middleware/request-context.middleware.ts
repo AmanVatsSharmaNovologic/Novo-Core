@@ -2,7 +2,7 @@
 * File: src/modules/common/middleware/request-context.middleware.ts
 * Module: modules/common/middleware
 * Purpose: Attach requestId and initialize request context for each incoming request
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 */
 

@@ -2,7 +2,7 @@
 * File: src/shared/crypto/jwk.rotation.ts
 * Module: shared/crypto
 * Purpose: Scheduled key rotation and warm-up for JWKS
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Rotates key daily; configurable later

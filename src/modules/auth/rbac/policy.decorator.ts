@@ -2,7 +2,7 @@
 * File: src/modules/auth/rbac/policy.decorator.ts
 * Module: modules/auth/rbac
 * Purpose: Decorator to require permissions on handlers
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Use with PolicyGuard

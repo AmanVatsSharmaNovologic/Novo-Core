@@ -2,7 +2,7 @@
 * File: src/shared/config/config.types.ts
 * Module: shared/config
 * Purpose: Type-safe application configuration interfaces and tokens
-* Author: Cursor / BharatERP
+* Author: Aman Sharma / Novologic
 * Last-updated: 2025-11-08
 * Notes:
 * - Defines AppConfig and nested sections for typed access across the app
