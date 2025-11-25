@@ -28,7 +28,7 @@
           <li><code><%= s %></code></li>
         <% }) %>
       </ul>
-      <form method="POST" action="/consent">
+      <form method="POST" action="/consent" id="consent-form">
         <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
         <input type="hidden" name="client_id" value="<%= clientId %>" />
         <input type="hidden" name="redirect_uri" value="<%= redirectUri %>" />
@@ -36,10 +36,24 @@
         <input type="hidden" name="state" value="<%= state %>" />
         <input type="hidden" name="code_challenge" value="<%= codeChallenge %>" />
         <input type="hidden" name="code_challenge_method" value="<%= codeChallengeMethod %>" />
-        <button type="submit" name="decision" value="approve">Allow</button>
-        <button type="submit" name="decision" value="deny">Deny</button>
+        <button type="submit" name="decision" value="approve" id="consent-approve">Allow</button>
+        <button type="submit" name="decision" value="deny" id="consent-deny">Deny</button>
       </form>
     </div>
+    <script>
+      // Prevent multiple rapid approvals/denials which can create confusing UX
+      // or race conditions with CSRF/session state.
+      (function () {
+        var form = document.getElementById('consent-form');
+        var approve = document.getElementById('consent-approve');
+        var deny = document.getElementById('consent-deny');
+        if (!form || !approve || !deny) return;
+        form.addEventListener('submit', function () {
+          approve.disabled = true;
+          deny.disabled = true;
+        });
+      })();
+    </script>
   </body>
   </html>
 

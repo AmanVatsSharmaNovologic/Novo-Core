@@ -26,7 +26,7 @@
       <% if (typeof error !== 'undefined') { %>
         <div class="error"><%= error %></div>
       <% } %>
-      <form method="POST" action="/login">
+      <form method="POST" action="/login" id="login-form">
         <input type="hidden" name="csrf_token" value="<%= csrfToken %>" />
         <div class="row">
           <input
@@ -48,11 +48,23 @@
         <input type="hidden" name="code_challenge" value="<%= codeChallenge %>" />
         <input type="hidden" name="code_challenge_method" value="<%= codeChallengeMethod %>" />
         <div class="row">
-          <button type="submit">Continue</button>
+          <button type="submit" id="login-submit">Continue</button>
         </div>
         <small>© NovoLogic</small>
       </form>
     </div>
+    <script>
+      // Prevent accidental double-submits which can race CSRF/token state.
+      (function () {
+        var form = document.getElementById('login-form');
+        var submitBtn = document.getElementById('login-submit');
+        if (!form || !submitBtn) return;
+        form.addEventListener('submit', function () {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Signing in…';
+        });
+      })();
+    </script>
   </body>
   </html>
 
