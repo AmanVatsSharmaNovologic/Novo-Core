@@ -7,7 +7,6 @@
  * @created 2025-11-25
  */
 
-import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
@@ -16,7 +15,8 @@ import { Identity } from '../src/modules/auth/entities/identity.entity';
 import { seedAuth } from './helpers/auth.seed';
 
 describe('Public registration (e2e)', () => {
-  let app: INestApplication;
+  // Use a broad type here to avoid Nest version type conflicts in tests.
+  let app: any;
   let ds: DataSource;
   let identities: Repository<Identity>;
 
