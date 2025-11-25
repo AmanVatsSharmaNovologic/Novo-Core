@@ -51,14 +51,15 @@ async function bootstrap() {
           return callback(null, true);
         }
       } catch {
-        // If origin parsing fails, fall back to explicit allowlist/wildcard
+        // If origin parsing fails, fall through to allowlist/wildcard check
       }
 
       const allowed =
         config.cors.allowedOrigins.some((o) => origin === o) ||
         origin.endsWith('.novologic.co');
 
-      return allowed ? callback(null, true) : callback(new Error('CORS blocked by policy'));
+      // Never throw here; returning `false` simply omits CORS headers and avoids 500s.
+      return callback(null, allowed);
     },
   });
 
