@@ -130,6 +130,108 @@ export class InvitationResultGql {
 }
 
 /**
+ * Portfolio within an organisation (e.g. Residential, Commercial).
+ */
+@ObjectType()
+export class PortfolioGql {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  tenantId!: string;
+
+  @Field()
+  name!: string;
+
+  @Field()
+  type!: string;
+
+  @Field()
+  status!: string;
+}
+
+/**
+ * Construction project within a portfolio.
+ */
+@ObjectType()
+export class ProjectGql {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  tenantId!: string;
+
+  @Field()
+  portfolioId!: string;
+
+  @Field()
+  name!: string;
+
+  @Field()
+  code!: string;
+
+  @Field({ nullable: true })
+  location?: string;
+
+  @Field()
+  status!: string;
+
+  @Field({ nullable: true })
+  startDate?: string;
+
+  @Field({ nullable: true })
+  endDate?: string;
+}
+
+/**
+ * Team within a project (site, design, finance, etc.).
+ */
+@ObjectType()
+export class TeamGql {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  tenantId!: string;
+
+  @Field()
+  projectId!: string;
+
+  @Field()
+  name!: string;
+
+  @Field({ nullable: true })
+  kind?: string;
+
+  @Field({ nullable: true })
+  description?: string;
+}
+
+/**
+ * Team member inside a team.
+ */
+@ObjectType()
+export class TeamMemberGql {
+  @Field(() => ID)
+  id!: string;
+
+  @Field()
+  tenantId!: string;
+
+  @Field()
+  teamId!: string;
+
+  @Field()
+  userId!: string;
+
+  @Field({ nullable: true })
+  roleName?: string;
+
+  @Field()
+  status!: string;
+}
+
+/**
  * GraphQL view of a user session for session management UIs.
  */
 @ObjectType()
@@ -194,6 +296,12 @@ export class MeGql {
 
   @Field(() => [SessionGql], { nullable: true })
   recentSessions?: SessionGql[];
+
+  @Field(() => String)
+  onboardingStep!: string;
+
+  @Field(() => Boolean)
+  hasOrganisations!: boolean;
 }
 
 

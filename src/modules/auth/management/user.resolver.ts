@@ -153,6 +153,38 @@ export class UserResolverGql {
   }
 
   /**
+   * Mark the current user's onboarding as completed.
+   * Frontends should call this after org/portfolio/project/team setup is done.
+   */
+  @Mutation(() => Boolean)
+  @UseGuards(GraphqlAuthGuard)
+  async completeOnboarding(): Promise<boolean> {
+    const ctx = RequestContext.get();
+    const tenantId = ctx?.tenantId;
+    const userId = ctx?.userId;
+    if (!tenantId || !userId) {
+      throw new HttpException({ code: 'UNAUTHORIZED' }, HttpStatus.UNAUTHORIZED);
+    }
+    const user = await this.repo.findOne({ where: { id: userId, tenantId } });
+    if (!user) {
+      throw new HttpException({ code: 'USER_NOT_FOUND' }, HttpStatus.NOT_FOUND);
+    }
+    (user as any).onboardingStep = 'DONE';
+    (user as any).onboardedAt = new Date();
+    await this.repo.save(user);
+
+    await this.audit.logEvent({
+      tenantId,
+      actorId: userId,
+      type: 'user.onboarding.completed',
+      resource: user.id,
+    });
+    this.logger.info({ tenantId, userId }, 'User onboarding marked as DONE via GraphQL');
+
+    return true;
+  }
+
+  /**
    * Aggregate viewer context for dashboard hydration: user, org, roles, settings, recent sessions.
    */
   @Query(() => MeGql)
