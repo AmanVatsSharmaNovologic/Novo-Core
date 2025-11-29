@@ -7,7 +7,7 @@
  */
 
 import { HttpException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { PublicRegistrationService } from './public-registration.service';
 import { Identity } from '../../entities/identity.entity';
 import { User } from '../../entities/user.entity';
@@ -15,11 +15,16 @@ import { Membership } from '../../entities/membership.entity';
 import { PasswordService } from '../../passwords/services/password.service';
 import { ClientService } from '../../clients/services/client.service';
 
-type RepoWithData<T> = Repository<T> & { __data: T[] };
+type RepoWithData<T> = {
+  __data: T[];
+  findOne: (opts: any) => Promise<T | null>;
+  create: (partial: Partial<T>) => T;
+  save: (entity: T) => Promise<T>;
+};
 
 function createInMemoryRepo<T extends { id?: string }>(): RepoWithData<T> {
   const store: T[] = [];
-  const repo: Partial<RepoWithData<T>> = {
+  const repo: RepoWithData<T> = {
     __data: store,
     async findOne(opts: any): Promise<T | null> {
       const where = opts?.where ?? {};
@@ -40,7 +45,7 @@ function createInMemoryRepo<T extends { id?: string }>(): RepoWithData<T> {
       return entity;
     },
   };
-  return repo as RepoWithData<T>;
+  return repo;
 }
 
 describe('PublicRegistrationService (unit, mocked DB)', () => {
@@ -150,6 +155,6 @@ describe('PublicRegistrationService (unit, mocked DB)', () => {
       expect(typeof body.message).toBe('string');
     }
   });
-}
+});
 
 

@@ -10,6 +10,7 @@ import { UserResolverGql } from './user.resolver';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { PasswordService } from '../passwords/services/password.service';
+import { Tenant } from '../entities/tenant.entity';
 
 function repoMock() {
   const store: any[] = [];
@@ -34,7 +35,37 @@ function repoMock() {
 describe('UserResolverGql', () => {
   it('registers a new user', async () => {
     const repo = repoMock();
-    const resolver = new UserResolverGql(repo, new PasswordService());
+    const tenantRepo = {} as Repository<Tenant>;
+    const passwords: Partial<PasswordService> = {
+      hashPassword: jest.fn(async () => 'hashed'),
+    };
+    const rbac: any = {
+      getUserRoleNames: jest.fn(),
+    };
+    const audit: any = {
+      logEvent: jest.fn(),
+    };
+    const logger: any = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    const sessions: any = {
+      listSessionsForUser: jest.fn(),
+      findSessionInTenant: jest.fn(),
+      revokeSession: jest.fn(),
+    };
+
+    const resolver = new UserResolverGql(
+      repo,
+      tenantRepo,
+      passwords as PasswordService,
+      rbac,
+      audit,
+      logger,
+      sessions,
+    );
     const out = await resolver.registerUser({
       tenantId: 't-1',
       email: 'alice@example.com',
