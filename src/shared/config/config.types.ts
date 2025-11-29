@@ -38,6 +38,16 @@ export interface DomainConfig {
   cookieDomain: string;
 }
 
+export interface MailConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  password: string;
+  from: string;
+  fromName: string;
+}
+
 export interface AppConfig {
   env: NodeEnvironment;
   name: string;
@@ -46,6 +56,7 @@ export interface AppConfig {
   cookie: CookieConfig;
   cors: CorsConfig;
   domain: DomainConfig;
+  mail?: MailConfig;
   db?: {
     host: string;
     port: number;

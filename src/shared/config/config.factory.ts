@@ -16,7 +16,7 @@ try {
 } catch {}
  
 import { z } from 'zod';
-import { AppConfig, NodeEnvironment } from './config.types';
+import { AppConfig, MailConfig, NodeEnvironment } from './config.types';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -41,6 +41,13 @@ const envSchema = z.object({
   DB_PASSWORD: z.string().default('postgres'),
   DB_SSL: z.string().optional(),
   DB_MIGRATIONS_RUN: z.string().optional(),
+  MAIL_HOST: z.string().optional(),
+  MAIL_PORT: z.coerce.number().int().positive().optional(),
+  MAIL_SECURE: z.coerce.boolean().optional(),
+  MAIL_USER: z.string().optional(),
+  MAIL_PASSWORD: z.string().optional(),
+  MAIL_FROM: z.string().email().optional(),
+  MAIL_FROM_NAME: z.string().optional(),
 });
 
 export function buildAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -107,6 +114,26 @@ export function buildAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig 
   const dbSsl = hasEnv('DB_SSL') ? parseBool(env.DB_SSL) : (urlParts.ssl ?? false);
   const dbSchema = urlParts.schema;
 
+  // Mail configuration (optional - only included if all required fields are present)
+  let mailConfig: MailConfig | undefined;
+  if (
+    hasEnv('MAIL_HOST') &&
+    hasEnv('MAIL_PORT') &&
+    hasEnv('MAIL_USER') &&
+    hasEnv('MAIL_PASSWORD') &&
+    hasEnv('MAIL_FROM')
+  ) {
+    mailConfig = {
+      host: v.MAIL_HOST!,
+      port: v.MAIL_PORT!,
+      secure: hasEnv('MAIL_SECURE') ? v.MAIL_SECURE! : true,
+      user: v.MAIL_USER!,
+      password: v.MAIL_PASSWORD!,
+      from: v.MAIL_FROM!,
+      fromName: v.MAIL_FROM_NAME || 'NovoLogic',
+    };
+  }
+
   const config: AppConfig = {
     env: v.NODE_ENV as NodeEnvironment,
     name: v.APP_NAME,
@@ -132,6 +159,7 @@ export function buildAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig 
       publicBaseUrl: v.PUBLIC_BASE_URL,
       cookieDomain: v.COOKIE_DOMAIN,
     },
+    mail: mailConfig,
     db: {
       host: dbHost,
       port: dbPort,
