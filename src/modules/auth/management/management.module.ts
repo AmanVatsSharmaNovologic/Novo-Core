@@ -32,10 +32,27 @@ import { RbacResolverGql } from './rbac.resolver';
 import { AuditModule } from '../audit/audit.module';
 import { SessionsModule } from '../sessions/sessions.module';
 import { SessionResolverGql } from './session.resolver';
+import { Portfolio } from '../entities/portfolio.entity';
+import { Project } from '../entities/project.entity';
+import { Team } from '../entities/team.entity';
+import { TeamMember } from '../entities/team-member.entity';
+import { OrgStructureResolverGql } from './org-structure.resolver';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Tenant, User, Invitation, Role, UserRole, Permission, RolePermission]),
+    TypeOrmModule.forFeature([
+      Tenant,
+      User,
+      Invitation,
+      Role,
+      UserRole,
+      Permission,
+      RolePermission,
+      Portfolio,
+      Project,
+      Team,
+      TeamMember,
+    ]),
     PasswordsModule,
     RbacModule,
     AuditModule,
@@ -47,6 +64,7 @@ import { SessionResolverGql } from './session.resolver';
     OrgResolverGql,
     RbacResolverGql,
     SessionResolverGql,
+    OrgStructureResolverGql,
     {
       provide: APP_GUARD,
       useClass: TenantStatusGuard,

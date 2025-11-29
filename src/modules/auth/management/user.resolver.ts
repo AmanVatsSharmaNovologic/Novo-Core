@@ -172,6 +172,7 @@ export class UserResolverGql {
     const tenant = await this.tenants.findOne({ where: { id: tenantId } });
     const roles = await this.rbac.getUserRoleNames(tenantId, userId);
     const settings = this.mapProfileToSettings(user.profile ?? undefined);
+    const onboardingStep = (user as any).onboardingStep ?? 'NONE';
     const sessions = await this.sessions.listSessionsForUser(tenantId, userId);
     const recentSessions = sessions
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
@@ -201,7 +202,7 @@ export class UserResolverGql {
       actorId: userId,
       type: 'user.me.dashboard',
       resource: user.id,
-      metadata: { roles, sessions: recentSessions.length },
+      metadata: { roles, sessions: recentSessions.length, onboardingStep },
     });
     this.logger.info({ tenantId, userId, rolesCount: roles.length }, 'Resolved meDashboard via GraphQL');
 
@@ -211,6 +212,8 @@ export class UserResolverGql {
       roles,
       settings,
       recentSessions,
+      onboardingStep,
+      hasOrganisations: true,
     };
   }
 
