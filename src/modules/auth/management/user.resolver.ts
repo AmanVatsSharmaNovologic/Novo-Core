@@ -205,7 +205,8 @@ export class UserResolverGql {
     const roles = await this.rbac.getUserRoleNames(tenantId, userId);
     const settings = this.mapProfileToSettings(user.profile ?? undefined);
     const onboardingStep = (user as any).onboardingStep ?? 'NONE';
-    const sessions = await this.sessions.listSessionsForUser(tenantId, userId);
+    const sessionsRaw = await this.sessions.listSessionsForUser(tenantId, userId);
+    const sessions = Array.isArray(sessionsRaw) ? sessionsRaw.filter((s) => !!s) : [];
     const recentSessions = sessions
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, 5)
@@ -213,9 +214,9 @@ export class UserResolverGql {
         id: s.id,
         tenantId: s.tenantId,
         userId: s.userId,
-        device: (s as any).device ?? undefined,
-        ip: (s as any).ip ?? undefined,
-        lastSeenAt: (s as any).lastSeenAt ? (s as any).lastSeenAt.toISOString() : undefined,
+        device: (s as any)?.device ?? undefined,
+        ip: (s as any)?.ip ?? undefined,
+        lastSeenAt: (s as any)?.lastSeenAt ? (s as any).lastSeenAt.toISOString() : undefined,
         createdAt: s.createdAt.toISOString(),
       }));
 
