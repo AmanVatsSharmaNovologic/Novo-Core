@@ -6,8 +6,9 @@
  * @created 2025-12-01
  */
 
-import { Injectable, InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, Inject } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { randomBytes, createHash } from 'crypto';
 import { EmailVerification } from '../entities/email-verification.entity';
 import { Identity } from '../../auth/entities/identity.entity';
@@ -77,7 +78,7 @@ export class EmailVerificationService {
 
     // Invalidate any existing unverified tokens for this identity
     await this.verificationRepo.update(
-      { identityId, verifiedAt: null },
+      { identityId, verifiedAt: IsNull() },
       { verifiedAt: new Date(0) }, // Mark as expired/invalid
     );
 

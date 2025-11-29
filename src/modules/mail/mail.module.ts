@@ -13,10 +13,12 @@ import { EmailVerificationService } from './services/email-verification.service'
 import { EmailVerification } from './entities/email-verification.entity';
 import { Identity } from '../auth/entities/identity.entity';
 import { AppConfigModule } from '../../shared/config/config.module';
-import { LoggerModule } from '../../shared/logger/logger.module';
+import { LoggerModule } from '../../shared/logger.module';
 import { MailResolver } from './resolvers/mail.resolver';
 import { User } from '../auth/entities/user.entity';
 import { Membership } from '../auth/entities/membership.entity';
+import { RbacModule } from '../auth/rbac/rbac.module';
+import { GraphqlAuthGuard } from '../auth/rbac/graphql-auth.guard';
 
 @Global()
 @Module({
@@ -24,8 +26,9 @@ import { Membership } from '../auth/entities/membership.entity';
     TypeOrmModule.forFeature([EmailVerification, Identity, User, Membership]),
     AppConfigModule,
     LoggerModule,
+    RbacModule, // Required for GraphqlAuthGuard dependencies
   ],
-  providers: [MailService, EmailVerificationService, MailResolver],
+  providers: [MailService, EmailVerificationService, MailResolver, GraphqlAuthGuard],
   exports: [MailService, EmailVerificationService],
 })
 export class MailModule {}

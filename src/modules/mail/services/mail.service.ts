@@ -15,7 +15,7 @@ import { AppConfig, CONFIG_DI_TOKEN } from '../../../shared/config/config.types'
 import { LoggerService } from '../../../shared/logger';
 import { RequestContext } from '../../../shared/request-context';
 
-export interface SendEmailOptions {
+export interface SendEmailOptions { 
   to: string;
   subject: string;
   html?: string;
