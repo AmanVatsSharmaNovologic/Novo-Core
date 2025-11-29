@@ -69,6 +69,13 @@ export class HttpErrorFilter implements ExceptionFilter {
           return HttpStatus.SERVICE_UNAVAILABLE;
         case 'DUPLICATE_ORDER':
           return HttpStatus.CONFLICT;
+        case 'EMAIL_VERIFICATION_EXPIRED':
+          return HttpStatus.GONE;
+        case 'EMAIL_VERIFICATION_INVALID':
+        case 'EMAIL_VERIFICATION_NOT_FOUND':
+          return HttpStatus.BAD_REQUEST;
+        case 'EMAIL_ALREADY_VERIFIED':
+          return HttpStatus.CONFLICT;
         default:
           return HttpStatus.BAD_REQUEST;
       }

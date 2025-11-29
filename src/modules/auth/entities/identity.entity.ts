@@ -27,6 +27,12 @@ export class Identity {
   @Column({ type: 'varchar', length: 24, default: 'active' })
   status!: 'active' | 'disabled';
 
+  @Column({ type: 'boolean', default: false })
+  emailVerified!: boolean;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  emailVerifiedAt?: Date;
+
   @Column({ type: 'jsonb', nullable: true })
   profile?: Record<string, unknown>;
 
