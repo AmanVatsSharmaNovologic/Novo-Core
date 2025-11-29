@@ -40,6 +40,12 @@ export class User {
   @Column({ type: 'jsonb', nullable: true })
   profile?: Record<string, unknown>;
 
+  @Column({ type: 'varchar', length: 32, default: 'NONE' })
+  onboardingStep!: 'NONE' | 'PROFILE' | 'ORG_SETUP' | 'DONE';
+
+  @Column({ type: 'timestamptz', nullable: true })
+  onboardedAt?: Date;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date;
 
