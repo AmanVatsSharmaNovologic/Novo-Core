@@ -554,3 +554,154 @@ const res = await authGqlClient.query({ query: MeDashboardDocument });
 - Use `settings.theme` to initialise your design system theme.
 - Use `roles` and `recentSessions` to drive security/visibility features.
 
+---
+
+## 8. First-time onboarding for construction SaaS
+
+After a new user has registered via `/public/register` and completed the OIDC
+login flow, they will reach your SPA with valid cookies but **no portfolios,
+projects, or teams yet**. The recommended onboarding UX is:
+
+1. Call `meDashboard` on first load.
+2. If `meDashboard.onboardingStep !== "DONE"`, route the user to an onboarding
+   wizard instead of the normal dashboard.
+
+### 8.1 Step 1 – Confirm profile & settings
+
+Use `meUser` + `meSettings` to prefill a profile form and then call
+`updateMeSettings` to store timezone/locale/theme/avatar. This brings
+`onboardingStep` from `NONE` to `PROFILE` (server-side evolution).
+
+### 8.2 Step 2 – Create organisation & first portfolio
+
+Use the existing `createOrg` mutation to create an organisation for the
+customer (e.g. \"Sharma Constructions Pvt Ltd\"). Then create the first
+portfolio for that org:
+
+```graphql
+mutation CreatePortfolio($input: CreatePortfolioInput!) {
+  createPortfolio(input: $input) {
+    id
+    tenantId
+    name
+    type
+    status
+  }
+}
+```
+
+With variables:
+
+```json
+{
+  "input": {
+    "tenantId": "<active-tenant-id>",
+    "name": "Residential Portfolio",
+    "type": "RESIDENTIAL"
+  }
+}
+```
+
+Call `portfoliosByTenant(tenantId)` to drive a portfolio selector in the UI.
+
+### 8.3 Step 3 – Create first project
+
+Create the first construction project under a portfolio:
+
+```graphql
+mutation CreateProject($input: CreateProjectInput!) {
+  createProject(input: $input) {
+    id
+    tenantId
+    portfolioId
+    name
+    code
+    location
+    status
+    startDate
+    endDate
+  }
+}
+```
+
+Typical variables:
+
+```json
+{
+  "input": {
+    "tenantId": "<active-tenant-id>",
+    "portfolioId": "<portfolio-id>",
+    "name": "Tower A - Phase 1",
+    "code": "TWR-A-P1",
+    "location": "Pune, MH",
+    "startDate": "2025-12-01"
+  }
+}
+```
+
+Use `projectsByPortfolio(tenantId, portfolioId)` to build the project picker
+for the dashboard.
+
+### 8.4 Step 4 – Create core teams and assign members
+
+Create one or more teams for a project (e.g. \"Site Team\", \"Design Team\"):
+
+```graphql
+mutation CreateTeam($input: CreateTeamInput!) {
+  createTeam(input: $input) {
+    id
+    tenantId
+    projectId
+    name
+    kind
+    description
+  }
+}
+```
+
+Then attach members (your current user plus invited users) to teams:
+
+```graphql
+mutation AddTeamMember($input: AddTeamMemberInput!) {
+  addTeamMember(input: $input) {
+    id
+    tenantId
+    teamId
+    userId
+    roleName
+    status
+  }
+}
+```
+
+List members for a team using:
+
+```graphql
+query TeamMembers($tenantId: ID!, $teamId: ID!) {
+  teamMembersByTeam(tenantId: $tenantId, teamId: $teamId) {
+    id
+    userId
+    roleName
+    status
+  }
+}
+```
+
+### 8.5 When to consider onboarding \"DONE\"
+
+From a UX perspective, you can treat onboarding as complete once:
+
+- At least **one portfolio** exists for the tenant.
+- At least **one project** exists under some portfolio.
+- Optionally, at least **one team** is created and has the current user as a
+  member.
+
+After these steps, your SPA can:
+
+- Call a small mutation (e.g. `completeOnboarding`) or rely on server-side
+  evolution of `onboardingStep` to `DONE`.
+- On subsequent logins, `meDashboard.onboardingStep` will be `\"DONE\"` and you
+  can route directly to the main dashboard using:
+  - `meDashboard` for header/org/role/theme state.
+  - `portfoliosByTenant` / `projectsByPortfolio` / `teamsByProject` for
+    navigation within the construction hierarchy.
