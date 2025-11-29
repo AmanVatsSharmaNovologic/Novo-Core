@@ -137,6 +137,7 @@ global identity and a platform-tenant user for the main dashboard SPA.
 - **Responses**:
   - `201 Created`:
     - Body: `{ "identityId": "<uuid>", "email": "user@example.com" }`
+    - **Note**: After successful registration, a verification email is automatically sent to the provided email address. The user must verify their email before they can fully access their account.
   - `409 Conflict`:
     - Body (shape): `{ "code": "IDENTITY_EXISTS", "message": "Identity already exists", ... }`
     - Means this email is already registered (via this flow or admin/invitations).
@@ -166,11 +167,8 @@ export async function registerAndLogin(email: string, password: string) {
     return { ok: false, reason: 'error' as const };
   }
 
-  // Registration succeeded – identity is auto-verified/active in this v1.
-  // Immediately enter the normal PKCE login flow.
-  const { startLogin } = await import('./startLogin');
-  void startLogin();
-
+  // Registration succeeded – verification email has been sent.
+  // Redirect user to a "check your email" page instead of immediately logging in.
   return { ok: true as const, reason: 'created' as const };
 }
 ```
@@ -224,9 +222,253 @@ export default function SignUpPage() {
 }
 ```
 
-> Note: A future version will introduce **real email verification** (magic link /
-> OTP). For now, the backend auto-verifies the email and marks the identity as
-> active immediately after successful registration.
+---
+
+## Email Verification
+
+After registration, users receive a verification email with a link to verify their email address. Email verification is **required** before users can fully access their account.
+
+### Verification Flow
+
+1. **User registers** → Receives verification email automatically
+2. **User clicks link in email** → Redirected to verification endpoint
+3. **Backend verifies token** → Email marked as verified, identity activated
+4. **User redirected to frontend** → Can now log in
+
+### REST Endpoints
+
+#### Verify Email (GET)
+
+- **Endpoint**: `GET https://api.novologic.co/public/verify-email?token=<verification-token>`
+- **Auth**: Public (no authentication required)
+- **Behavior**: 
+  - Verifies the email token
+  - Redirects to frontend success/error page
+  - Success redirect: `/auth/verify-email?success=true&email=<email>`
+  - Error redirects: `/auth/verify-email?error=<error-code>`
+- **Error Codes**:
+  - `missing_token` - Token parameter not provided
+  - `expired` - Verification token has expired (24 hours)
+  - `invalid_token` - Token is invalid or not found
+  - `already_verified` - Email has already been verified
+
+#### Resend Verification Email (POST)
+
+- **Endpoint**: `POST https://api.novologic.co/public/resend-verification`
+- **Auth**: Public (no authentication required)
+- **Body (JSON)**:
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+- **Responses**:
+  - `200 OK`:
+    - Body: `{ "success": true, "message": "If an account exists with this email, a verification email has been sent." }`
+    - **Note**: Always returns success to prevent email enumeration attacks
+
+### GraphQL Mutations/Queries
+
+#### Verify Email (Mutation)
+
+```graphql
+mutation VerifyEmail($token: String!) {
+  verifyEmail(token: $token) {
+    identityId
+    email
+    success
+  }
+}
+```
+
+- **Auth**: Public (no authentication required)
+- **Variables**:
+  ```json
+  {
+    "token": "<verification-token-from-email>"
+  }
+  ```
+- **Response**: `{ "identityId": "<uuid>", "email": "user@example.com", "success": true }`
+- **Errors**: Throws GraphQL errors for expired/invalid tokens
+
+#### Resend Verification Email (Mutation)
+
+```graphql
+mutation ResendVerificationEmail($email: String!) {
+  resendVerificationEmail(email: $email)
+}
+```
+
+- **Auth**: Public (no authentication required)
+- **Variables**:
+  ```json
+  {
+    "email": "user@example.com"
+  }
+  ```
+- **Response**: `true` (always succeeds to prevent email enumeration)
+
+#### Check Email Verification Status (Query)
+
+```graphql
+query CheckEmailVerificationStatus {
+  checkEmailVerificationStatus {
+    verified
+    email
+    verifiedAt
+  }
+}
+```
+
+- **Auth**: Required (authenticated users only)
+- **Response**: 
+  ```json
+  {
+    "verified": true,
+    "email": "user@example.com",
+    "verifiedAt": "2025-12-01T12:00:00Z"
+  }
+  ```
+
+### Frontend Implementation Example
+
+#### Registration Flow with Email Verification
+
+```tsx
+// app/signup/page.tsx
+'use client';
+import * as React from 'react';
+import { registerAndLogin } from '@/utils/auth/registerAndLogin';
+import { useRouter } from 'next/navigation';
+
+export default function SignUpPage() {
+  const router = useRouter();
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const result = await registerAndLogin(email, password);
+    if (!result.ok) {
+      if (result.reason === 'exists') {
+        setError('An account with this email already exists. Please sign in.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+    } else {
+      // Redirect to "check your email" page
+      router.push('/auth/verify-email-sent?email=' + encodeURIComponent(email));
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      {/* form fields */}
+    </form>
+  );
+}
+```
+
+#### Email Verification Page
+
+```tsx
+// app/auth/verify-email/page.tsx
+'use client';
+import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
+
+export default function VerifyEmailPage() {
+  const params = useSearchParams();
+  const success = params.get('success');
+  const error = params.get('error');
+  const email = params.get('email');
+
+  if (success === 'true') {
+    return (
+      <div>
+        <h1>Email Verified!</h1>
+        <p>Your email {email} has been successfully verified.</p>
+        <a href="/login">Continue to Login</a>
+      </div>
+    );
+  }
+
+  if (error) {
+    const messages: Record<string, string> = {
+      expired: 'This verification link has expired. Please request a new one.',
+      invalid_token: 'This verification link is invalid.',
+      already_verified: 'This email has already been verified.',
+      missing_token: 'Invalid verification link.',
+    };
+
+    return (
+      <div>
+        <h1>Verification Failed</h1>
+        <p>{messages[error] || 'An error occurred during verification.'}</p>
+        <a href="/auth/resend-verification">Resend Verification Email</a>
+      </div>
+    );
+  }
+
+  return <div>Verifying your email...</div>;
+}
+```
+
+#### Resend Verification Email
+
+```tsx
+// app/auth/resend-verification/page.tsx
+'use client';
+import * as React from 'react';
+
+export default function ResendVerificationPage() {
+  const [email, setEmail] = React.useState('');
+  const [sent, setSent] = React.useState(false);
+
+  async function handleResend(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await fetch(`${process.env.NEXT_PUBLIC_AUTH_BASE_URL}/public/resend-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    setSent(true);
+  }
+
+  if (sent) {
+    return (
+      <div>
+        <h1>Check Your Email</h1>
+        <p>If an account exists with {email}, a verification email has been sent.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleResend}>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+      />
+      <button type="submit">Resend Verification Email</button>
+    </form>
+  );
+}
+```
+
+### Important Notes
+
+- **Token Expiration**: Verification tokens expire after **24 hours**
+- **Email Enumeration Prevention**: Resend endpoint always returns success to prevent attackers from discovering which emails are registered
+- **Account Status**: Until email is verified, the identity status is `pending` and may have limited access
+- **Verification Required**: Some features may require verified email (enforced by backend)
 
 ### 2) Handle `/auth/callback` in Next.js
 
