@@ -41,6 +41,7 @@
     "ejs": "^3.1.10",
     "graphql": "^16.9.0",
     "graphql-query-complexity": "^0.12.0",
+    "graphql-yoga": "^5.17.0",
     "helmet": "^7.2.0",
     "jose": "^5.9.6",
     "otplib": "^12.0.1",
