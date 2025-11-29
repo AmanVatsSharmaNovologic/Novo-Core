@@ -14,15 +14,18 @@ import { EmailVerification } from './entities/email-verification.entity';
 import { Identity } from '../auth/entities/identity.entity';
 import { AppConfigModule } from '../../shared/config/config.module';
 import { LoggerModule } from '../../shared/logger/logger.module';
+import { MailResolver } from './resolvers/mail.resolver';
+import { User } from '../auth/entities/user.entity';
+import { Membership } from '../auth/entities/membership.entity';
 
 @Global()
 @Module({
   imports: [
-    TypeOrmModule.forFeature([EmailVerification, Identity]),
+    TypeOrmModule.forFeature([EmailVerification, Identity, User, Membership]),
     AppConfigModule,
     LoggerModule,
   ],
-  providers: [MailService, EmailVerificationService],
+  providers: [MailService, EmailVerificationService, MailResolver],
   exports: [MailService, EmailVerificationService],
 })
 export class MailModule {}
