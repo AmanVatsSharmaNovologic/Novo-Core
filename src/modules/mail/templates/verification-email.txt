@@ -1,0 +1,15 @@
+Verify Your Email Address
+
+Hello,
+
+Thank you for registering with NovoLogic! Please verify your email address by visiting the link below:
+
+{{verificationUrl}}
+
+⏰ Important: This verification link will expire in 24 hours.
+
+If you didn't create an account with NovoLogic, you can safely ignore this email.
+
+© {{year}} NovoLogic. All rights reserved.
+This is an automated message, please do not reply to this email.
+
