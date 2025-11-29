@@ -39,6 +39,7 @@ import { User } from '../entities/user.entity';
 import { Membership } from '../entities/membership.entity';
 import { PublicRegistrationService } from './services/public-registration.service';
 import { RegistrationController } from './controllers/registration.controller';
+import { MailModule } from '../../mail/mail.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { RegistrationController } from './controllers/registration.controller';
     ClientsModule,
     PasswordsModule,
     RbacModule,
+    MailModule,
   ],
   controllers: [
     JwksController,

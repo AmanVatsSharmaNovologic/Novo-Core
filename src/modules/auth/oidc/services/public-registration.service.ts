@@ -14,6 +14,7 @@ import { Membership } from '../../entities/membership.entity';
 import { PasswordService } from '../../passwords/services/password.service';
 import { ClientService } from '../../clients/services/client.service';
 import { LoggerService } from '../../../../shared/logger';
+import { EmailVerificationService } from '../../../mail/services/email-verification.service';
 
 @Injectable()
 export class PublicRegistrationService {
@@ -22,6 +23,7 @@ export class PublicRegistrationService {
     private readonly passwords: PasswordService,
     private readonly clients: ClientService,
     private readonly logger: LoggerService,
+    private readonly emailVerification: EmailVerificationService,
   ) {}
 
   /**
@@ -58,7 +60,8 @@ export class PublicRegistrationService {
         email: normalizedEmail,
         passwordHash,
         mfaEnabled: false,
-        status: 'active',
+        status: 'pending', // Changed to pending until email is verified
+        emailVerified: false,
       });
       const savedIdentity = await identityRepo.save(identity);
 
@@ -113,6 +116,18 @@ export class PublicRegistrationService {
       }
 
       await runner.commitTransaction();
+
+      // Create and send verification email (outside transaction to avoid blocking)
+      try {
+        await this.emailVerification.createVerificationToken(savedIdentity.id, normalizedEmail);
+        childLogger.info({ identityId: savedIdentity.id }, 'Verification email sent');
+      } catch (emailError) {
+        // Log but don't fail registration - email can be resent later
+        childLogger.error(
+          { err: emailError, identityId: savedIdentity.id },
+          'Failed to send verification email during registration',
+        );
+      }
 
       childLogger.info(
         { identityId: savedIdentity.id, tenantId: platformTenantId, userId: user.id },

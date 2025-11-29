@@ -37,6 +37,7 @@ import { Project } from '../entities/project.entity';
 import { Team } from '../entities/team.entity';
 import { TeamMember } from '../entities/team-member.entity';
 import { OrgStructureResolverGql } from './org-structure.resolver';
+import { MailModule } from '../../mail/mail.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { OrgStructureResolverGql } from './org-structure.resolver';
     RbacModule,
     AuditModule,
     SessionsModule,
+    MailModule,
   ],
   providers: [
     TenantResolver,
