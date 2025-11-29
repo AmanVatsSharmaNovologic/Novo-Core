@@ -12,8 +12,10 @@ import { EmailVerificationService } from '../../../mail/services/email-verificat
 import { LoggerService } from '../../../../shared/logger';
 import { AppConfig, CONFIG_DI_TOKEN } from '../../../../shared/config/config.types';
 import { Inject } from '@nestjs/common';
+import { IsEmail } from 'class-validator';
 
 export class ResendVerificationDto {
+  @IsEmail()
   email!: string;
 }
 

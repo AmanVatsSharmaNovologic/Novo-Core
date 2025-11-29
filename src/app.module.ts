@@ -32,6 +32,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ObservabilityModule } from './modules/observability/observability.module';
 import { createComplexityPlugin } from './shared/graphql/graphql-complexity';
 import { GlobalAuthGuard } from './modules/auth/rbac/global-auth.guard';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { GlobalAuthGuard } from './modules/auth/rbac/global-auth.guard';
       context: ({ req }) => ({ req, requestId: (req as any).requestId }),
     }),
     AuthModule,
+    MailModule, // Global mail module for email sending
     // OidcModule, // now aggregated
     // ManagementModule, // now aggregated
     UserModule,

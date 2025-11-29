@@ -25,7 +25,7 @@ export class Identity {
   mfaEnabled!: boolean;
 
   @Column({ type: 'varchar', length: 24, default: 'active' })
-  status!: 'active' | 'disabled';
+  status!: 'active' | 'pending' | 'disabled';
 
   @Column({ type: 'boolean', default: false })
   emailVerified!: boolean;
