@@ -17,6 +17,13 @@ export class HttpErrorFilter implements ExceptionFilter {
   constructor(private readonly logger: LoggerService) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
+    // This filter is intended only for HTTP routes. For GraphQL and other
+    // contexts, rethrow and let the framework-specific handlers format errors.
+    if (host.getType() !== 'http') {
+      // Re-throw so GraphQL/Yoga can handle the exception correctly.
+      throw exception as any;
+    }
+
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
     const req = ctx.getRequest<Request>();
