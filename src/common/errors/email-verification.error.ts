@@ -32,3 +32,4 @@ export class EmailVerificationNotFoundError extends AppError {
   }
 }
 
+

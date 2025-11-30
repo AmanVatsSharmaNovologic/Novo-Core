@@ -13,3 +13,4 @@ If you didn't create an account with NovoLogic, you can safely ignore this email
 © {{year}} NovoLogic. All rights reserved.
 This is an automated message, please do not reply to this email.
 
+

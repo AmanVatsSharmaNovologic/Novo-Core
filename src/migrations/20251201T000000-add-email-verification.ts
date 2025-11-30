@@ -47,3 +47,4 @@ export class AddEmailVerification20251201000000 implements MigrationInterface {
   }
 }
 
+

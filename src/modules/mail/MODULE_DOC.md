@@ -218,3 +218,4 @@ The registration flow (`PublicRegistrationService`) automatically:
   - GraphQL and REST APIs
   - Integration with registration
 
+
