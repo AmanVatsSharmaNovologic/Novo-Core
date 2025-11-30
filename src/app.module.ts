@@ -28,11 +28,12 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { YogaDriver, YogaDriverConfig } from '@graphql-yoga/nestjs';
 import { useCSRFPrevention } from '@graphql-yoga/plugin-csrf-prevention';
 import { ManagementModule } from './modules/auth/management/management.module';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { ObservabilityModule } from './modules/observability/observability.module';
 import { createComplexityPlugin } from './shared/graphql/graphql-complexity';
 import { GlobalAuthGuard } from './modules/auth/rbac/global-auth.guard';
 import { MailModule } from './modules/mail/mail.module';
+import { GqlThrottlerGuard } from './modules/common/guards/gql-throttler.guard';
 
 @Module({
   imports: [
@@ -54,10 +55,16 @@ import { MailModule } from './modules/mail/mail.module';
       // CSRF protection plugin plus query complexity guard to prevent abusive queries.
       plugins: [useCSRFPrevention(), createComplexityPlugin(1500)],
       graphiql: process.env.NODE_ENV !== 'production',
-      // Expose the underlying HTTP request so GraphqlAuthGuard and other
-      // HTTP-oriented guards can operate correctly, while still surfacing
-      // requestId for resolvers.
-      context: ({ req }) => ({ req, requestId: (req as any).requestId }),
+      // Expose the underlying HTTP request/response so GraphqlAuthGuard and
+      // GraphQL-aware infrastructure (e.g., GqlThrottlerGuard) can operate
+      // correctly, while still surfacing requestId for resolvers.
+      // Yoga/Nest will pass the Express req/res objects here.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      context: ({ req, res }: { req: any; res: any }) => ({
+        req,
+        res,
+        requestId: (req as any).requestId,
+      }),
     }),
     AuthModule,
     MailModule, // Global mail module for email sending
@@ -77,7 +84,7 @@ import { MailModule } from './modules/mail/mail.module';
     },
     {
       provide: 'APP_GUARD',
-      useClass: ThrottlerGuard,
+      useClass: GqlThrottlerGuard,
     },
     {
       provide: 'APP_GUARD',

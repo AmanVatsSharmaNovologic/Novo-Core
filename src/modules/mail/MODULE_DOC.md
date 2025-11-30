@@ -174,7 +174,7 @@ Added fields to `identities` table:
 
 ### Queries
 
-- `checkEmailVerificationStatus: EmailVerificationStatus!` - Check verification status (requires auth)
+- `checkEmailVerificationStatus: EmailVerificationStatus!` - Check verification status (requires auth; protected by global rate limiting and GraphQL-aware guards)
 
 ## REST API
 
@@ -217,5 +217,9 @@ The registration flow (`PublicRegistrationService`) automatically:
   - Email verification flow
   - GraphQL and REST APIs
   - Integration with registration
+  - `checkEmailVerificationStatus` query wired through `GraphqlAuthGuard`
++ **2025-11-30**: GraphQL infra hardening
+  - Introduced `GqlThrottlerGuard` to avoid `req.ip` undefined errors for GraphQL operations.
+  - `checkEmailVerificationStatus` now benefits from safe rate limiting in GraphQL flows.
 
 

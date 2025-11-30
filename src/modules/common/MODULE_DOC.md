@@ -15,9 +15,12 @@ Boundaries
 Contents
 - `middleware/request-context.middleware.ts`
 - `filters/http-exception.filter.ts`
+- `guards/csrf.guard.ts`
+- `guards/gql-throttler.guard.ts`
 
 Changelog
 - 2025-11-08: Initial module extraction and docs
 - 2025-11-15 IST: Global GraphQL driver migrated to Yoga; common middleware continues to propagate `requestId` used in GraphQL context.
+- 2025-11-30 IST: Added `GqlThrottlerGuard` for safe rate limiting across HTTP + GraphQL without `req.ip` undefined errors.
 
 
