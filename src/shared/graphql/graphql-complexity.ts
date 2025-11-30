@@ -10,12 +10,26 @@
 
 import { createComplexityRule, fieldExtensionsEstimator, simpleEstimator } from 'graphql-query-complexity';
 import { GraphQLError } from 'graphql';
+import { RequestContext } from '../request-context';
+import { LoggerFactory } from '../logger';
+import { buildAppConfig } from '../config/config.factory';
 
 export function createComplexityValidationRule(maxComplexity = 2000) {
+  const config = buildAppConfig();
+  const logger = LoggerFactory.create(config);
   return createComplexityRule({
     maximumComplexity: maxComplexity,
     onComplete: (complexity: number) => {
-      // noop
+      const ctx = RequestContext.get();
+      const requestId = ctx?.requestId;
+      logger.debug(
+        {
+          requestId,
+          complexity,
+          maxComplexity,
+        },
+        'GraphQL query complexity evaluated',
+      );
     },
     createError: (max: number, actual: number) =>
       new GraphQLError(`Query is too complex: ${actual}. Maximum allowed complexity: ${max}`),

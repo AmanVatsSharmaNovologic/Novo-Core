@@ -38,13 +38,33 @@ export class UserResolverGql {
     private readonly sessions: SessionService,
   ) {}
 
+  /**
+   * List users for the active tenant.
+   * - Requires authentication.
+   * - Requires owner/admin role within the tenant.
+   * - Enforces tenant scope via RequestContext to prevent cross-tenant access.
+   */
   @Query(() => [UserGql])
+  @UseGuards(GraphqlAuthGuard)
   async users(@Args('tenantId', { type: () => String, nullable: true }) tenantId?: string): Promise<UserGql[]> {
+    const ctx = RequestContext.get();
+    const ctxTenantId = ctx?.tenantId;
+    const effectiveTenantId = tenantId ?? ctxTenantId;
+    if (!effectiveTenantId) {
+      throw new HttpException({ code: 'UNAUTHORIZED' }, HttpStatus.UNAUTHORIZED);
+    }
+    this.ensureTenantScope(effectiveTenantId);
+    await this.ensureAdminOrOwner(effectiveTenantId);
+
     const rows = await this.repo.find({
-      where: tenantId ? { tenantId } : {},
+      where: { tenantId: effectiveTenantId },
       take: 50,
       order: { createdAt: 'DESC' },
     });
+    this.logger.info(
+      { tenantId: effectiveTenantId, count: rows.length },
+      'Listed users via GraphQL management resolver',
+    );
     return rows.map((u) => ({
       id: u.id,
       tenantId: u.tenantId,
@@ -53,8 +73,18 @@ export class UserResolverGql {
     }));
   }
 
+  /**
+   * Management-only user registration within a tenant.
+   * - Requires authentication.
+   * - Requires owner/admin role in the target tenant.
+   * - Public self-registration flows must use the dedicated OIDC/REST endpoints instead.
+   */
   @Mutation(() => UserGql)
+  @UseGuards(GraphqlAuthGuard)
   async registerUser(@Args('input') input: RegisterUserInput): Promise<UserGql> {
+    this.ensureTenantScope(input.tenantId);
+    await this.ensureAdminOrOwner(input.tenantId);
+
     const exists = await this.repo.findOne({ where: { tenantId: input.tenantId, email: input.email } });
     if (exists) {
       throw new AppError('CONFLICT', 'User already exists');
@@ -67,6 +97,10 @@ export class UserResolverGql {
       status: 'active',
     });
     const saved = await this.repo.save(u);
+    this.logger.info(
+      { tenantId: saved.tenantId, userId: saved.id, email: saved.email },
+      'Registered user via GraphQL management resolver',
+    );
     return { id: saved.id, tenantId: saved.tenantId, email: saved.email, status: saved.status };
   }
 
@@ -248,6 +282,28 @@ export class UserResolverGql {
       onboardingStep,
       hasOrganisations: true,
     };
+  }
+
+  private ensureTenantScope(tenantId: string): void {
+    const ctxTenant = RequestContext.get()?.tenantId;
+    if (ctxTenant && ctxTenant !== tenantId) {
+      throw new HttpException(
+        { code: 'TENANT_MISMATCH', message: 'Tenant scope mismatch' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  private async ensureAdminOrOwner(tenantId: string): Promise<void> {
+    const ctx = RequestContext.get();
+    const userId = ctx?.userId;
+    if (!userId) {
+      throw new HttpException({ code: 'UNAUTHORIZED' }, HttpStatus.UNAUTHORIZED);
+    }
+    const roles = await this.rbac.getUserRoleNames(tenantId, userId);
+    if (!roles.includes('owner') && !roles.includes('admin')) {
+      throw new HttpException({ code: 'FORBIDDEN', message: 'Insufficient role' }, HttpStatus.FORBIDDEN);
+    }
   }
 
   private mapProfileToSettings(profile?: Record<string, unknown>): UserSettingsGql {

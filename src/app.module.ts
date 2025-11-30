@@ -20,6 +20,7 @@ import { AppConfigModule } from './shared/config/config.module';
 import { LoggerModule } from './shared/logger.module';
 import { RequestContextMiddleware } from './modules/common/middleware/request-context.middleware';
 import { HttpErrorFilter } from './modules/common/filters/http-exception.filter';
+import { GraphqlExceptionFilter } from './modules/common/filters/graphql-exception.filter';
 import { DatabaseModule } from './shared/database/database.module';
 import { TenancyModule } from './shared/tenancy/tenancy.module';
 import { CryptoModule } from './shared/crypto/crypto.module';
@@ -53,6 +54,7 @@ import { GqlThrottlerGuard } from './modules/common/guards/gql-throttler.guard';
       autoSchemaFile: true,
       sortSchema: true,
       // CSRF protection plugin plus query complexity guard to prevent abusive queries.
+      // Complexity limit can be tuned via config by changing the value below.
       plugins: [useCSRFPrevention(), createComplexityPlugin(1500)],
       graphiql: process.env.NODE_ENV !== 'production',
       // Expose the underlying HTTP request/response so GraphqlAuthGuard and
@@ -81,6 +83,10 @@ import { GqlThrottlerGuard } from './modules/common/guards/gql-throttler.guard';
     {
       provide: APP_FILTER,
       useClass: HttpErrorFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GraphqlExceptionFilter,
     },
     {
       provide: 'APP_GUARD',
